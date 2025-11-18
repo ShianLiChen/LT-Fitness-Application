@@ -6,6 +6,7 @@ import os
 # Import blueprints
 from auth import auth_bp
 from routes.user_routes import user_bp
+from routes.workout_routes import workout_bp
 
 def create_app():
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -26,6 +27,7 @@ def create_app():
     # Register blueprints
     app.register_blueprint(auth_bp)
     app.register_blueprint(user_bp)
+    app.register_blueprint(workout_bp)
 
     return app
 
