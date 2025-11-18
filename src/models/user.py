@@ -1,5 +1,6 @@
 from database import db
 from datetime import datetime
+import bcrypt
 
 class User(db.Model):
     __tablename__ = "users"
@@ -27,3 +28,4 @@ class User(db.Model):
             "role": self.role,
             "created_at": self.created_at.isoformat()
         }
+    

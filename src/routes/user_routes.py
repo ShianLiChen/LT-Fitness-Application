@@ -34,3 +34,9 @@ def dashboard():
         current_user=g.current_user,
         workouts=workouts
     )
+
+@user_bp.get("/profile")
+@jwt_required
+@nocache
+def profile():
+    return render_template("profile.html")

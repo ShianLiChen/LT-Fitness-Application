@@ -98,3 +98,24 @@ def logout():
     resp = make_response(jsonify({"message": "Successfully logged out"}))
     resp.set_cookie("jwt_token", "", expires=0)  # clear cookie
     return resp
+
+@auth_bp.post("/change-password")
+@jwt_required
+def change_password():
+    from flask import request, g
+    data = request.get_json()
+    old_password = data.get("old_password")
+    new_password = data.get("new_password")
+
+    user = g.current_user
+
+    # Check old password
+    if not verify_password(old_password, user.salt, user.password_hash):
+        return jsonify({"error": "Current password is incorrect"}), 400
+
+    # Update password using the renamed method
+    new_hash = hash_password(new_password, user.salt)  # keep your pepper+salt logic
+    user.password_hash = new_hash
+    db.session.commit()
+
+    return jsonify({"message": "Password changed successfully"}), 200
