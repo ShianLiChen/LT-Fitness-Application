@@ -4,8 +4,11 @@ from database import db
 from models.user import User
 from utils.password_utils import generate_salt, hash_password, verify_password
 from auth.jwt_handler import create_token, jwt_required
+from schemas.user_schema import UserSchema
+from marshmallow import ValidationError
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
+user_schema = UserSchema()
 
 # --------------------
 # Register
@@ -14,9 +17,15 @@ auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 def register():
     data = request.get_json()
 
-    username = data.get("username")
-    email = data.get("email")
-    password = data.get("password")
+    try:
+        # Validate input
+        validated_data = user_schema.load(data)
+    except ValidationError as err:
+        return jsonify({"error": "Invalid input", "messages": err.messages}), 400
+
+    username = validated_data["username"]
+    email = validated_data["email"]
+    password = validated_data["password"]
 
     if not username or not email or not password:
         return jsonify({"error": "All fields required"}), 400
@@ -73,4 +82,5 @@ def login():
 @jwt_required
 def me():
     from flask import g
-    return jsonify({"user": g.current_user.to_dict()}), 200
+    user = g.current_user
+    return jsonify({"user": user_schema.dump(user)})
