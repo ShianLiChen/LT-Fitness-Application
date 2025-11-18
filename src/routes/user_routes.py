@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, g, make_response
 from auth.jwt_handler import jwt_required, nocache
+from models.workout import Workout
 
 user_bp = Blueprint("user", __name__)
 
@@ -25,13 +26,11 @@ def login_page():
 @jwt_required
 @nocache
 def dashboard():
-    # For now, keep it simple
-    stats = {}  # or any dummy stats for testing
-    resp = make_response(render_template("dashboard.html", current_user=g.current_user, stats=stats))
-    
-    # Add headers to prevent caching
-    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    resp.headers["Pragma"] = "no-cache"
-    resp.headers["Expires"] = "0"
-    
-    return resp
+    workouts = Workout.query.filter_by(user_id=g.current_user.id)\
+                .order_by(Workout.start_time.desc()).all()
+
+    return render_template(
+        "dashboard.html",
+        current_user=g.current_user,
+        workouts=workouts
+    )
