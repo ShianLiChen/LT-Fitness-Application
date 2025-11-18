@@ -1,7 +1,7 @@
 import jwt
 from datetime import datetime, timedelta, timezone
 from functools import wraps
-from flask import request, jsonify, g
+from flask import request, jsonify, g, redirect, url_for, render_template, make_response
 from config import Config
 from models.user import User
 from database import db
@@ -28,28 +28,40 @@ def decode_token(token: str):
 def jwt_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        header = request.headers.get("Authorization", "")
-        parts = header.split()
+        token = request.cookies.get("jwt_token")
+        if not token:
+            header = request.headers.get("Authorization", "")
+            parts = header.split()
+            if len(parts) == 2 and parts[0].lower() == "bearer":
+                token = parts[1]
 
-        if len(parts) != 2 or parts[0].lower() != "bearer":
-            return jsonify({"error": "Missing or invalid Authorization header"}), 401
-
-        token = parts[1]
+        if not token:
+            return redirect(url_for("user.login_page"))
 
         try:
             data = decode_token(token)
+            user = User.query.get(int(data["sub"]))
+            if not user:
+                raise Exception("User not found")
         except jwt.ExpiredSignatureError:
-            return jsonify({"error": "Token expired"}), 401
+            return render_template("error.html", message="Your session has expired. Please log in again.")
         except jwt.InvalidTokenError:
-            return jsonify({"error": "Invalid token"}), 401
-
-        user = User.query.get(int(data["sub"]))
-        if not user:
-            return jsonify({"error": "User not found"}), 401
+            return render_template("error.html", message="Invalid token. Please log in again.")
+        except Exception as e:
+            return render_template("error.html", message=str(e))
 
         g.current_user = user
         g.jwt = data
-
         return fn(*args, **kwargs)
 
     return wrapper
+
+def nocache(view):
+    @wraps(view)
+    def no_cache(*args, **kwargs):
+        resp = make_response(view(*args, **kwargs))
+        resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        resp.headers["Pragma"] = "no-cache"
+        resp.headers["Expires"] = "0"
+        return resp
+    return no_cache

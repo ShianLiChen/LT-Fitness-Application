@@ -35,12 +35,16 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     if(response.status === 200){
         messageDiv.className = 'alert alert-success';
         messageDiv.innerText = 'Login successful!';
-        // Save token in localStorage
-        localStorage.setItem('jwt_token', data.token);
         setTimeout(() => window.location.href = '/dashboard', 1000);
     } else {
         messageDiv.className = 'alert alert-danger';
         messageDiv.innerText = data.error || 'Login failed';
+    }
+});
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted) { // true if coming from bfcache (back button)
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) loginForm.reset();
     }
 });
 </script>

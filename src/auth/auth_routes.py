@@ -1,5 +1,5 @@
 # auth/auth_routes.py
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g, make_response
 from database import db
 from models.user import User
 from utils.password_utils import generate_salt, hash_password, verify_password
@@ -55,7 +55,6 @@ def register():
 @auth_bp.post("/login")
 def login():
     data = request.get_json()
-
     username = data.get("username")
     password = data.get("password")
 
@@ -64,15 +63,21 @@ def login():
 
     user = User.query.filter_by(username=username).first()
 
-    if not user:
-        return jsonify({"error": "Invalid credentials"}), 401
-
-    if not verify_password(password, user.salt, user.password_hash):
+    if not user or not verify_password(password, user.salt, user.password_hash):
         return jsonify({"error": "Invalid credentials"}), 401
 
     token = create_token(user.id, user.role)
 
-    return jsonify({"token": token, "user": user.to_dict()}), 200
+    # Store token in HTTP-only cookie
+    resp = make_response(jsonify({"message": "Login successful", "user": user.to_dict()}))
+    resp.set_cookie(
+        "jwt_token", token,
+        httponly=True,
+        secure=False,  # Set to True if using HTTPS
+        samesite="Lax",  # or "Strict" depending on your needs
+        max_age=60*60  # optional, e.g., 1 hour
+    )
+    return resp
 
 
 # --------------------
@@ -84,3 +89,12 @@ def me():
     from flask import g
     user = g.current_user
     return jsonify({"user": user_schema.dump(user)})
+
+# --------------------
+# Logout (clear cookie)
+# --------------------
+@auth_bp.post("/logout")
+def logout():
+    resp = make_response(jsonify({"message": "Successfully logged out"}))
+    resp.set_cookie("jwt_token", "", expires=0)  # clear cookie
+    return resp

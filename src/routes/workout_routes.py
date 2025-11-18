@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, g
+from flask import Blueprint, request, jsonify, g, render_template
 from database import db
 from models.workout import Workout
 from schemas.workout_schema import WorkoutSchema
