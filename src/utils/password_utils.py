@@ -1,5 +1,4 @@
 import bcrypt
-import os
 from config import Config
 
 def generate_salt() -> str:
