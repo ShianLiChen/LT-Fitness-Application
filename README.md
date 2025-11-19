@@ -9,3 +9,4 @@
 - **HTML, CSS, JavaScript**, and **Bootstrap** for frontend
 - **bcrypt** (salt + pepper) for secure password hashing
 - **JWT** for authentication and session management
+- **Flask-JWT-Extended** for CSRF protection and token management

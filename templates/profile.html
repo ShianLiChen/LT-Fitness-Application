@@ -44,19 +44,22 @@
 </div>
 
 <script>
-// Load user profile info
+// Load profile info
 async function loadProfile() {
     try {
-        const res = await fetch('/auth/me', { method: 'GET' });
+        const res = await fetch('/auth/me', { credentials: 'include' });
         if (!res.ok) throw new Error('Failed to fetch user info');
         const data = await res.json();
         const user = data.user;
 
         document.getElementById('username').innerText = user.username;
         document.getElementById('email').innerText = user.email;
-        document.getElementById('createdAt').innerText = user.created_at 
-            ? new Date(user.created_at).toLocaleDateString() 
-            : 'N/A';
+        if (user.created_at) {
+            const utcDate = new Date(user.created_at + 'Z'); // append Z to mark it as UTC
+            document.getElementById('createdAt').innerText = utcDate.toLocaleString(); // local time
+        } else {
+            document.getElementById('createdAt').innerText = 'N/A';
+        }
     } catch (err) {
         document.getElementById('profileCard').innerHTML = `<div class="alert alert-danger">Error loading profile: ${err.message}</div>`;
     }
@@ -79,11 +82,20 @@ document.getElementById('changePasswordForm').addEventListener('submit', async f
         return;
     }
 
+    if (!window.csrfToken) {
+        messageDiv.className = 'alert alert-danger';
+        messageDiv.innerText = "CSRF token missing. Make sure you are logged in.";
+        return;
+    }
+
     try {
         const response = await fetch('/auth/change-password', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': window.csrfToken
+            },
+            credentials: 'include',
             body: JSON.stringify({
                 old_password: oldPassword,
                 new_password: newPassword
@@ -102,6 +114,12 @@ document.getElementById('changePasswordForm').addEventListener('submit', async f
     } catch (err) {
         messageDiv.className = 'alert alert-danger';
         messageDiv.innerText = 'Error: ' + err.message;
+    }
+});
+window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {  // triggered when page is loaded from bfcache (back/forward)
+        const form = document.getElementById('changePasswordForm');
+        if (form) form.reset();  // clears all inputs
     }
 });
 </script>

@@ -4,7 +4,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
-    SECRET_KEY = os.getenv("SECRET_KEY")
+    SECRET_KEY = os.getenv("SECRET_KEY")  
+    JWT_SECRET_KEY = os.getenv("SECRET_KEY")  
     JWT_PEPPER = os.getenv("JWT_PEPPER")
 
     MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
@@ -16,7 +17,14 @@ class Config:
     SQLALCHEMY_DATABASE_URI = (
         f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASS}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
     )
-
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     ACCESS_TOKEN_MINUTES = 30
+
+    # JWT cookie settings
+    JWT_TOKEN_LOCATION = ["cookies"]
+    JWT_COOKIE_CSRF_PROTECT = True
+    JWT_ACCESS_COOKIE_PATH = "/"
+    JWT_REFRESH_COOKIE_PATH = "/token/refresh"
+    JWT_COOKIE_SECURE = False  # set True in production
+    JWT_COOKIE_SAMESITE = "Lax"

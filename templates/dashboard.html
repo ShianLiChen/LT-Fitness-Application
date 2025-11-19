@@ -14,6 +14,7 @@
                 <th>Reps</th>
                 <th>Weight (lbs)</th>
                 <th>Duration (min)</th>
+                <th>Calories Burned</th>
             </tr>
         </thead>
         <tbody>
@@ -25,6 +26,7 @@
                 <td>{{ workout.reps or "-" }}</td>
                 <td>{{ workout.weight_lbs or "-" }}</td>
                 <td>{{ workout.duration_minutes or "-" }}</td>
+                <td>{{ workout.calories_burned or "-" }}</td>
             </tr>
             {% endfor %}
         </tbody>
