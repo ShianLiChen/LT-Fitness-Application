@@ -54,9 +54,12 @@ async function loadProfile() {
 
         document.getElementById('username').innerText = user.username;
         document.getElementById('email').innerText = user.email;
-        document.getElementById('createdAt').innerText = user.created_at
-            ? new Date(user.created_at).toLocaleDateString()
-            : 'N/A';
+        if (user.created_at) {
+            const utcDate = new Date(user.created_at + 'Z'); // append Z to mark it as UTC
+            document.getElementById('createdAt').innerText = utcDate.toLocaleString(); // local time
+        } else {
+            document.getElementById('createdAt').innerText = 'N/A';
+        }
     } catch (err) {
         document.getElementById('profileCard').innerHTML = `<div class="alert alert-danger">Error loading profile: ${err.message}</div>`;
     }
