@@ -1,6 +1,5 @@
 from database import db
 from datetime import datetime
-import bcrypt
 
 class User(db.Model):
     __tablename__ = "users"
@@ -10,7 +9,6 @@ class User(db.Model):
     email = db.Column(db.String(255), unique=True, nullable=False)
 
     password_hash = db.Column(db.String(255), nullable=False)
-    salt = db.Column(db.String(255), nullable=False)
 
     role = db.Column(db.String(50), default="user")
 

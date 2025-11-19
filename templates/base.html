@@ -9,45 +9,81 @@
     <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">Fitness Tracker</a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav ms-auto">
-                    {% if not current_user %}
-                        <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/register">Register</a></li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="/profile">{{ current_user.username }}</a>
-                        </li>
-                        <li class="nav-item">
-                            <button class="btn btn-link nav-link" id="logoutBtn">Logout</button>
-                        </li>
-                    {% endif %}
-                </ul>
-            </div>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">Fitness Tracker</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav ms-auto">
+                {% if not current_user %}
+                    <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/register">Register</a></li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/profile">{{ current_user.username }}</a>
+                    </li>
+                    <li class="nav-item">
+                        <button class="btn btn-link nav-link" id="logoutBtn">Logout</button>
+                    </li>
+                {% endif %}
+            </ul>
         </div>
-    </nav>
-
-    <div class="container mt-5">
-        {% block content %}
-        {% endblock %}
     </div>
+</nav>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-    async function logout() {
-        await fetch('/auth/logout', { method: 'POST' });
-        window.location.href = '/login';
+<div class="container mt-5">
+    {% block content %}
+    {% endblock %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+window.csrfToken = null;
+
+// Fetch CSRF token on page load if user is logged in
+async function fetchCsrfToken() {
+    try {
+        const res = await fetch('/auth/csrf-token', { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to get CSRF token');
+        const data = await res.json();
+        window.csrfToken = data.csrf_token;
+    } catch (err) {
+        console.warn('CSRF token fetch failed:', err);
+    }
+}
+
+// Call it immediately
+fetchCsrfToken();
+
+// Logout function
+async function logout() {
+    if (!window.csrfToken) {
+        console.error("CSRF token missing. Make sure user is logged in.");
+        return;
     }
 
-    const logoutBtn = document.getElementById('logoutBtn');
-    if(logoutBtn){
-        logoutBtn.addEventListener('click', logout);
+    try {
+        const res = await fetch('/auth/logout', {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': window.csrfToken },
+            credentials: 'include'
+        });
+
+        if (res.ok) {
+            window.location.href = '/login';
+        } else {
+            const data = await res.json();
+            console.error('Logout failed:', data.error || data);
+        }
+    } catch (err) {
+        console.error('Logout request failed:', err);
     }
-    </script>
-    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+}
+
+const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) logoutBtn.addEventListener('click', logout);
+</script>
+
+<script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
 </body>
 </html>
