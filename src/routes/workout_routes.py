@@ -3,7 +3,7 @@ from database import db
 from models.workout import Workout
 from schemas.workout_schema import WorkoutSchema
 from auth.jwt_handler import jwt_required
-from datetime import datetime
+from datetime import datetime, timedelta
 
 workout_bp = Blueprint("workout", __name__, url_prefix="/workouts")
 workout_schema = WorkoutSchema()
@@ -20,13 +20,21 @@ def create_workout():
         validated = workout_schema.load(data)
     except Exception as e:
         return jsonify({"error": "Invalid input", "messages": e.messages}), 400
+    
+    duration_calc = 0.0
+    try:
+        duration_calc = validated.get("end_time") - validated.get("start_time", datetime.utcnow())
+        duration_calc = duration_calc.total_seconds()
+        duration_calc = float(duration_calc/60)
+    except Exception as e:
+        return jsonify({"error": "Invalid calculation", "messages": e.messages}), 400
 
     workout = Workout(
         user_id=g.current_user.id,
         exercise_name=validated["exercise_name"],
         start_time=validated.get("start_time", datetime.utcnow()),
         end_time=validated.get("end_time"),
-        duration_minutes=validated.get("duration_minutes"),
+        duration_minutes=validated.get("duration_minutes", duration_calc),
         sets=validated.get("sets"),
         reps=validated.get("reps"),
         weight_lbs=validated.get("weight_lbs"),
