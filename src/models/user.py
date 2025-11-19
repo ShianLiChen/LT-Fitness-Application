@@ -16,6 +16,7 @@ class User(db.Model):
 
     # inside User class
     workouts = db.relationship("Workout", back_populates="user", cascade="all, delete-orphan")
+    recipes = db.relationship("Recipe", back_populates="user", cascade="all, delete-orphan")
 
 
     def to_dict(self):

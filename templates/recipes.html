@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}My Cookbook{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-utensils me-2"></i>My Cookbook</h2>
+        <a href="{{ url_for('recipe.create_recipe_page') }}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Find / Create Recipe
+        </a>
+    </div>
+
+    {% if recipes %}
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for recipe in recipes %}
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    {% if recipe.image_url %}
+                        <img src="{{ recipe.image_url }}" class="card-img-top" alt="{{ recipe.title }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                        <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <i class="fas fa-carrot fa-3x"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="card-body">
+                        <h5 class="card-title">{{ recipe.title }}</h5>
+                        
+                        <!-- Nutrition Badges -->
+                        <div class="mb-2">
+                            {% if recipe.calories %}
+                                <span class="badge bg-warning text-dark">{{ recipe.calories }} kcal</span>
+                            {% endif %}
+                            {% if recipe.protein %}
+                                <span class="badge bg-info text-dark">{{ recipe.protein }}g Prot</span>
+                            {% endif %}
+                        </div>
+
+                        <p class="card-text text-truncate small text-muted">{{ recipe.ingredients }}</p>
+                    </div>
+                    
+                    <div class="card-footer bg-white border-top-0 d-flex justify-content-between">
+                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#recipeModal{{ recipe.id }}">
+                            View Recipe
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteRecipe({{ recipe.id }})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal for details -->
+            <div class="modal fade" id="recipeModal{{ recipe.id }}" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">{{ recipe.title }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <h6>Ingredients:</h6>
+                            <p>{{ recipe.ingredients }}</p>
+                            <hr>
+                            <h6>Instructions:</h6>
+                            <p style="white-space: pre-wrap;">{{ recipe.instructions }}</p>
+                            
+                            {% if recipe.calories %}
+                            <div class="alert alert-info mt-3">
+                                <strong>Nutrition Estimates:</strong><br>
+                                Calories: {{ recipe.calories }} | Protein: {{ recipe.protein }}g | Carbs: {{ recipe.carbs }}g | Fats: {{ recipe.fats }}g
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5 bg-light rounded-3">
+            <i class="fas fa-hamburger fa-3x text-muted mb-3"></i>
+            <h3>No recipes saved yet</h3>
+            <p class="text-muted">Search for meal ideas or ask our AI chef!</p>
+            <a href="{{ url_for('recipe.create_recipe_page') }}" class="btn btn-primary">Get Started</a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+async function deleteRecipe(id) {
+    if(!confirm("Delete this recipe?")) return;
+    try {
+        const res = await fetch(`/recipes/${id}`, {
+            method: 'DELETE',
+            headers: { 'X-CSRF-TOKEN': window.csrfToken }
+        });
+        if(res.ok) window.location.reload();
+    } catch(err) { console.error(err); }
+}
+</script>
+{% endblock %}

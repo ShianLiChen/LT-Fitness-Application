@@ -23,10 +23,25 @@
                         <a class="nav-link" href="/workouts/ui">My Workouts</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/profile">{{ current_user.username }}</a>
+                        <a class="nav-link" href="/recipes/ui">My Cookbook</a>
                     </li>
-                    <li class="nav-item">
-                        <button class="btn btn-link nav-link" id="logoutBtn">Logout</button>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Account
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <li>
+                                <a class="dropdown-item" href="/profile">
+                                    <i class="fas fa-user me-2"></i>{{ current_user.username }}
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <button class="dropdown-item text-danger" id="logoutBtn">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </button>
+                            </li>
+                        </ul>
                     </li>
                 {% endif %}
             </ul>

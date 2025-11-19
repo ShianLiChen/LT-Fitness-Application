@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}New Recipe{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <h2 class="mb-4 text-center">Find or Create Recipes</h2>
+
+        <!-- Tabs -->
+        <ul class="nav nav-pills nav-fill mb-4" id="recipeTab" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active" id="search-tab" data-bs-toggle="tab" data-bs-target="#search-pane" type="button">
+                    <i class="fas fa-search me-2"></i>Search Meals (TheMealDB)
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="ai-tab" data-bs-toggle="tab" data-bs-target="#ai-pane" type="button">
+                    <i class="fas fa-robot me-2"></i>AI Chef (GourmetGlobetrotter)
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            
+            <!-- TAB 1: Search -->
+            <div class="tab-pane fade show active" id="search-pane">
+                <div class="input-group mb-4">
+                    <input type="text" id="mealInput" class="form-control" placeholder="Search e.g. Chicken, Pasta, Pie...">
+                    <button class="btn btn-primary" onclick="searchMeals()">Search</button>
+                </div>
+                <div id="mealResults" class="row g-3"></div>
+            </div>
+
+            <!-- TAB 2: AI -->
+            <div class="tab-pane fade" id="ai-pane">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <i class="fas fa-hat-chef me-2"></i>Ask the AI Chef
+                    </div>
+                    <div class="card-body">
+                        <label class="form-label">What are you craving? (Include dietary needs)</label>
+                        <textarea id="aiPrompt" class="form-control mb-3" rows="3" placeholder="e.g. A high-protein vegetarian dinner using spinach and chickpeas"></textarea>
+                        <button class="btn btn-dark" onclick="generateAiRecipe()" id="genBtn">
+                            Generate Recipe
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- AI Result Preview -->
+                <div id="aiPreview" class="card mt-3 d-none">
+                    <div class="card-body">
+                        <h4 id="aiTitle"></h4>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h6>Ingredients:</h6>
+                                <p id="aiIngredients" class="small"></p>
+                                <h6>Instructions:</h6>
+                                <p id="aiInstructions" class="small"></p>
+                            </div>
+                            <div class="col-md-4 bg-light p-3 rounded">
+                                <h6>Nutrition (Est.)</h6>
+                                <ul class="list-unstyled">
+                                    <li>🔥 Cal: <span id="aiCal"></span></li>
+                                    <li>🥩 Prot: <span id="aiProt"></span>g</li>
+                                    <li>🍞 Carb: <span id="aiCarb"></span>g</li>
+                                    <li>🥑 Fat: <span id="aiFat"></span>g</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <button class="btn btn-success w-100 mt-2" onclick="saveAiRecipe()">Save to Cookbook</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+let currentAiRecipe = null;
+
+// --- SEARCH LOGIC ---
+async function searchMeals() {
+    const query = document.getElementById('mealInput').value;
+    const container = document.getElementById('mealResults');
+    container.innerHTML = '<div class="text-center w-100"><div class="spinner-border"></div></div>';
+
+    try {
+        const res = await fetch(`/recipes/api/search-external?query=${query}`);
+        const data = await res.json();
+        
+        container.innerHTML = '';
+        if(data.length === 0) {
+            container.innerHTML = '<p class="text-center text-muted w-100">No meals found.</p>';
+            return;
+        }
+
+        data.forEach(meal => {
+            const col = document.createElement('div');
+            col.className = 'col-md-6 col-lg-4';
+            col.innerHTML = `
+                <div class="card h-100">
+                    <img src="${meal.image_url}" class="card-img-top" style="height:150px; object-fit:cover">
+                    <div class="card-body">
+                        <h6 class="card-title">${meal.title}</h6>
+                        <small class="text-muted d-block text-truncate mb-2">${meal.ingredients}</small>
+                        <button class="btn btn-sm btn-outline-success w-100" onclick='saveApiRecipe(${JSON.stringify(meal).replace(/'/g, "&#39;")})'>Save Recipe</button>
+                    </div>
+                </div>
+            `;
+            container.appendChild(col);
+        });
+    } catch(err) {
+        container.innerHTML = '<p class="text-danger text-center w-100">Error searching meals.</p>';
+    }
+}
+
+async function saveApiRecipe(meal) {
+    if(!confirm(`Save "${meal.title}" to your cookbook?`)) return;
+    // API meals don't have macros usually, we save as null
+    const payload = {
+        title: meal.title,
+        ingredients: meal.ingredients,
+        instructions: meal.instructions,
+        image_url: meal.image_url,
+        calories: null, protein: null, carbs: null, fats: null
+    };
+    
+    await submitRecipe(payload);
+}
+
+// --- AI LOGIC ---
+async function generateAiRecipe() {
+    const prompt = document.getElementById('aiPrompt').value;
+    const btn = document.getElementById('genBtn');
+    if(!prompt) return alert("Please describe a recipe.");
+
+    btn.disabled = true;
+    btn.innerHTML = 'Cooking... <span class="spinner-border spinner-border-sm"></span>';
+
+    try {
+        const res = await fetch('/recipes/api/generate-ai', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.csrfToken},
+            body: JSON.stringify({prompt: prompt})
+        });
+        const data = await res.json();
+        
+        try {
+            const recipe = JSON.parse(data.response);
+            currentAiRecipe = recipe;
+            
+            // Fill Preview
+            document.getElementById('aiTitle').innerText = recipe.title;
+            document.getElementById('aiIngredients').innerText = recipe.ingredients;
+            document.getElementById('aiInstructions').innerText = recipe.instructions;
+            document.getElementById('aiCal').innerText = recipe.calories || '?';
+            document.getElementById('aiProt').innerText = recipe.protein || '?';
+            document.getElementById('aiCarb').innerText = recipe.carbs || '?';
+            document.getElementById('aiFat').innerText = recipe.fats || '?';
+            
+            document.getElementById('aiPreview').classList.remove('d-none');
+        } catch(e) {
+            alert("AI output format error. Check console.");
+            console.log(data.response);
+        }
+
+    } catch(err) {
+        alert("Failed to generate recipe.");
+    } finally {
+        btn.disabled = false;
+        btn.innerText = 'Generate Recipe';
+    }
+}
+
+async function saveAiRecipe() {
+    if(!currentAiRecipe) return;
+    
+    const payload = {
+        title: currentAiRecipe.title,
+        ingredients: currentAiRecipe.ingredients,
+        instructions: currentAiRecipe.instructions,
+        image_url: null, // AI doesn't generate images
+        calories: currentAiRecipe.calories,
+        protein: currentAiRecipe.protein,
+        carbs: currentAiRecipe.carbs,
+        fats: currentAiRecipe.fats
+    };
+    
+    await submitRecipe(payload);
+}
+
+// --- SHARED SAVE FUNCTION ---
+async function submitRecipe(payload) {
+    try {
+        const res = await fetch('/recipes/', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.csrfToken},
+            body: JSON.stringify(payload)
+        });
+        
+        if(res.ok) {
+            alert("Recipe Saved!");
+            window.location.href = '/recipes/ui';
+        } else {
+            const err = await res.json();
+            alert("Error saving: " + (err.error || "Unknown"));
+        }
+    } catch(e) {
+        console.error(e);
+    }
+}
+</script>
+{% endblock %}
