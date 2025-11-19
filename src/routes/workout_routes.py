@@ -6,6 +6,7 @@ from models.user import User
 from schemas.workout_schema import WorkoutSchema
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
+from auth.jwt_handler import csrf_protect
 
 workout_bp = Blueprint("workout", __name__, url_prefix="/workouts")
 workout_schema = WorkoutSchema()
@@ -17,6 +18,7 @@ workouts_schema = WorkoutSchema(many=True)
 # --------------------
 @workout_bp.post("/")
 @jwt_required()
+@csrf_protect
 def create_workout():
     try:
         user_id = int(get_jwt_identity())
@@ -99,6 +101,7 @@ def get_workout(id):
 # --------------------
 @workout_bp.put("/<int:id>")
 @jwt_required()
+@csrf_protect
 def update_workout(id):
     try:
         user_id = int(get_jwt_identity())
@@ -127,6 +130,7 @@ def update_workout(id):
 # --------------------
 @workout_bp.delete("/<int:id>")
 @jwt_required()
+@csrf_protect
 def delete_workout(id):
     try:
         user_id = int(get_jwt_identity())

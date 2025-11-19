@@ -5,6 +5,7 @@ from models.user import User
 from utils.password_utils import hash_password, verify_password
 from schemas.user_schema import UserSchema
 from marshmallow import ValidationError
+from auth.jwt_handler import csrf_protect
 
 # Flask-JWT-Extended
 from flask_jwt_extended import (
@@ -128,6 +129,7 @@ def csrf_token_route():
 # --------------------
 @auth_bp.post("/logout")
 @jwt_required()
+@csrf_protect
 def logout():
     resp = make_response(jsonify({"message": "Successfully logged out"}))
     unset_jwt_cookies(resp)
@@ -138,6 +140,7 @@ def logout():
 # --------------------
 @auth_bp.post("/change-password")
 @jwt_required()
+@csrf_protect
 def change_password():
     data = request.get_json()
     old_password = data.get("old_password")
