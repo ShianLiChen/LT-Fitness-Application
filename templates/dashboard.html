@@ -5,37 +5,63 @@
 {% block content %}
 <div class="container py-4">
     <!-- Welcome Hero Section -->
-    <div class="p-5 mb-4 bg-light rounded-3 shadow-sm border">
+    <div class="p-5 mb-4 bg-light rounded-3 shadow-sm border text-center">
         <div class="container-fluid py-3">
             <h1 class="display-5 fw-bold">Welcome back, {{ current_user.username }}!</h1>
-            <p class="col-md-8 fs-4 text-muted">Ready to crush your fitness goals today?</p>
+            <p class="col-md-8 fs-4 text-muted mx-auto">Ready to crush your healthy goals today?</p>
             
-            <div class="d-flex gap-3 mt-4">
-                <!-- Button to View Workouts -->
-                <a href="/workouts/ui" class="btn btn-primary btn-lg">
-                    <i class="fas fa-dumbbell me-2"></i> My Workouts
+            <div class="d-flex flex-wrap justify-content-center gap-3 mt-4">
+                <!-- WORKOUT BUTTONS -->
+                <a href="/workouts/ui" class="btn btn-dark btn-lg">
+                    <i class="fas fa-dumbbell me-2"></i> Workouts
                 </a>
-                
-                <!-- Button to Create New -->
-                <a href="/workouts/ui/create" class="btn btn-outline-success btn-lg">
-                    <i class="fas fa-plus me-2"></i> Log New Session
+                <a href="/workouts/ui/create" class="btn btn-outline-dark btn-lg">
+                    <i class="fas fa-plus me-2"></i> Log Workout
+                </a>
+
+                <!-- RECIPE BUTTONS -->
+                <a href="/recipes/ui" class="btn btn-success btn-lg">
+                    <i class="fas fa-utensils me-2"></i> Cookbook
+                </a>
+                <a href="/recipes/ui/create" class="btn btn-outline-success btn-lg">
+                    <i class="fas fa-carrot me-2"></i> Find Recipes
                 </a>
             </div>
         </div>
     </div>
 
-    <!-- Quick Stats / Shortcuts Row -->
-    <div class="row align-items-md-stretch">
+    <!-- Workouts and Nutrition Row (Side by Side) -->
+    <div class="row align-items-md-stretch mb-4">
+        <!-- Workouts Card -->
         <div class="col-md-6 mb-3">
             <div class="h-100 p-4 text-bg-dark rounded-3">
-                <h2>Your Progress</h2>
-                <p>Check your latest workout stats, view your history, and track your improvements over time.</p>
+                <h2><i class="fas fa-dumbbell mb-2"></i> Workouts</h2>
+                <p>
+                    You have logged <strong>{{ current_user.workouts|length }}</strong> workouts so far. 
+                    Keep the momentum going!
+                </p>
                 <a href="/workouts/ui" class="btn btn-outline-light" type="button">View History</a>
             </div>
         </div>
+
+        <!-- Nutrition / Recipes Card -->
         <div class="col-md-6 mb-3">
+            <div class="h-100 p-4 text-bg-success rounded-3">
+                <h2><i class="fas fa-utensils mb-2"></i> Nutrition</h2>
+                <p>
+                    You have saved <strong>{{ current_user.recipes|length }}</strong> recipes in your cookbook. 
+                    Find your next healthy meal!
+                </p>
+                <a href="/recipes/ui" class="btn btn-outline-light" type="button">Open Cookbook</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Card -->
+    <div class="row">
+        <div class="col-12">
             <div class="h-100 p-4 bg-body-tertiary border rounded-3">
-                <h2>Profile Settings</h2>
+                <h2><i class="fas fa-user-cog mb-2"></i> Profile</h2>
                 <p>Update your personal information, change your password, or manage your account settings.</p>
                 <a href="/profile" class="btn btn-outline-secondary" type="button">Manage Profile</a>
             </div>
