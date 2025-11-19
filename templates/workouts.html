@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-dumbbell me-2"></i>Workout Log</h2>
+        <a href="/workouts/ui/create" class="btn btn-success">
+            + Log New Workout
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Exercise</th>
+                            <th>Sets</th>
+                            <th>Reps</th>
+                            <th>Weight (lbs)</th>
+                            <th>Notes</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if workouts %}
+                            {% for workout in workouts %}
+                            <tr>
+                                <td>{{ workout.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td class="fw-bold text-primary">{{ workout.exercise_name }}</td>
+                                <td>{{ workout.sets or '-' }}</td>
+                                <td>{{ workout.reps or '-' }}</td>
+                                <td>{{ workout.weight_lbs or '-' }}</td>
+                                <td><small class="text-muted">{{ workout.notes or '' }}</small></td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteWorkout('{{ workout.id }}')">
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted">
+                                    No workouts logged yet. Go create one!
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function deleteWorkout(id) {
+    if(!confirm("Are you sure you want to delete this entry?")) return;
+
+    try {
+        const res = await fetch(`/workouts/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': window.csrfToken
+            }
+        });
+        
+        if(res.ok) {
+            window.location.reload();
+        } else {
+            alert("Failed to delete workout");
+        }
+    } catch(err) {
+        console.error(err);
+    }
+}
+</script>
+{% endblock %}
