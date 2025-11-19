@@ -1,37 +1,71 @@
 {% extends "base.html" %}
 
-{% block content %}
-<h1>Welcome, {{ current_user.username }}!</h1>
-<p>Here are your past workouts:</p>
+{% block title %}Dashboard{% endblock %}
 
-{% if workouts %}
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Exercise</th>
-                <th>Sets</th>
-                <th>Reps</th>
-                <th>Weight (lbs)</th>
-                <th>Duration (min)</th>
-                <th>Calories Burned</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for workout in workouts %}
-            <tr>
-                <td>{{ workout.start_time.strftime("%Y-%m-%d %H:%M") }}</td>
-                <td>{{ workout.exercise_name }}</td>
-                <td>{{ workout.sets or "-" }}</td>
-                <td>{{ workout.reps or "-" }}</td>
-                <td>{{ workout.weight_lbs or "-" }}</td>
-                <td>{{ workout.duration_minutes or "-" }}</td>
-                <td>{{ workout.calories_burned or "-" }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-{% else %}
-    <p>You don't have any workouts yet.</p>
-{% endif %}
+{% block content %}
+<div class="container py-4">
+    <!-- Welcome Hero Section -->
+    <div class="p-5 mb-4 bg-light rounded-3 shadow-sm border text-center">
+        <div class="container-fluid py-3">
+            <h1 class="display-5 fw-bold">Welcome back, {{ current_user.username }}!</h1>
+            <p class="col-md-8 fs-4 text-muted mx-auto">Ready to crush your healthy goals today?</p>
+            
+            <div class="d-flex flex-wrap justify-content-center gap-3 mt-4">
+                <!-- WORKOUT BUTTONS -->
+                <a href="/workouts/ui" class="btn btn-dark btn-lg">
+                    <i class="fas fa-dumbbell me-2"></i> Workouts
+                </a>
+                <a href="/workouts/ui/create" class="btn btn-outline-dark btn-lg">
+                    <i class="fas fa-plus me-2"></i> Log Workout
+                </a>
+
+                <!-- RECIPE BUTTONS -->
+                <a href="/recipes/ui" class="btn btn-success btn-lg">
+                    <i class="fas fa-utensils me-2"></i> Cookbook
+                </a>
+                <a href="/recipes/ui/create" class="btn btn-outline-success btn-lg">
+                    <i class="fas fa-carrot me-2"></i> Find Recipes
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workouts and Nutrition Row (Side by Side) -->
+    <div class="row align-items-md-stretch mb-4">
+        <!-- Workouts Card -->
+        <div class="col-md-6 mb-3">
+            <div class="h-100 p-4 text-bg-dark rounded-3">
+                <h2><i class="fas fa-dumbbell mb-2"></i> Workouts</h2>
+                <p>
+                    You have logged <strong>{{ current_user.workouts|length }}</strong> workouts so far. 
+                    Keep the momentum going!
+                </p>
+                <a href="/workouts/ui" class="btn btn-outline-light" type="button">View History</a>
+            </div>
+        </div>
+
+        <!-- Nutrition / Recipes Card -->
+        <div class="col-md-6 mb-3">
+            <div class="h-100 p-4 text-bg-success rounded-3">
+                <h2><i class="fas fa-utensils mb-2"></i> Nutrition</h2>
+                <p>
+                    You have saved <strong>{{ current_user.recipes|length }}</strong> recipes in your cookbook. 
+                    Find your next healthy meal!
+                </p>
+                <a href="/recipes/ui" class="btn btn-outline-light" type="button">Open Cookbook</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Card -->
+    <div class="row">
+        <div class="col-12">
+            <div class="h-100 p-4 bg-body-tertiary border rounded-3">
+                <h2><i class="fas fa-user-cog mb-2"></i> Profile</h2>
+                <p>Update your personal information, change your password, or manage your account settings.</p>
+                <a href="/profile" class="btn btn-outline-secondary" type="button">Manage Profile</a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
