@@ -12,13 +12,19 @@
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="/">Fitness Tracker</a>
+        <a class="navbar-brand" 
+            href="{% if current_user %}/dashboard{% else %}/{% endif %}">
+            Fitness Tracker
+        </a>
         <div class="collapse navbar-collapse">
             <ul class="navbar-nav ms-auto">
                 {% if not current_user %}
                     <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
                     <li class="nav-item"><a class="nav-link" href="/register">Register</a></li>
                 {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">Dashboard</a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/workouts/ui">My Workouts</a>
                     </li>
