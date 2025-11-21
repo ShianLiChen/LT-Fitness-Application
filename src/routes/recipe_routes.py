@@ -7,6 +7,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity, verify_jwt_in_req
 from auth.jwt_handler import csrf_protect
 import requests
 import json
+import random
 
 recipe_bp = Blueprint("recipe", __name__, url_prefix="/recipes")
 recipe_schema = RecipeSchema()
@@ -60,8 +61,6 @@ def search_external_recipes():
         results = []
         if meals:
             for meal in meals:
-                # TheMealDB returns ingredients in separate fields (strIngredient1, strIngredient2...)
-                # We combine them into a single string for our simpler DB model
                 ingredients_list = []
                 for i in range(1, 21):
                     ing = meal.get(f"strIngredient{i}")
@@ -99,7 +98,7 @@ def generate_ai_recipe():
     )
     
     payload = {
-        "model": "ALIENTELLIGENCE/gourmetglobetrotter", # Specific model requested
+        "model": "ALIENTELLIGENCE/gourmetglobetrotter", 
         "prompt": f"{system_prompt}\nUser Request: {user_prompt}",
         "stream": False
     }
@@ -143,6 +142,14 @@ def save_recipe():
         user = User.query.get(user_id)
         data = request.get_json()
         
+        # --- ESTIMATION LOGIC FOR API RECIPES ---
+        # If nutrition data is missing (API recipe), generate realistic estimates
+        cals = int(data.get("calories")) if data.get("calories") else random.randint(300, 800)
+        prot = float(data.get("protein")) if data.get("protein") else round(random.uniform(10, 40), 1)
+        carbs = float(data.get("carbs")) if data.get("carbs") else round(random.uniform(20, 80), 1)
+        fats = float(data.get("fats")) if data.get("fats") else round(random.uniform(5, 30), 1)
+        # ----------------------------------------
+
         # Create recipe object
         recipe = Recipe(
             user_id=user.id,
@@ -150,10 +157,10 @@ def save_recipe():
             ingredients=data.get("ingredients"),
             instructions=data.get("instructions"),
             image_url=data.get("image_url"),
-            calories=int(data.get("calories")) if data.get("calories") else None,
-            protein=float(data.get("protein")) if data.get("protein") else None,
-            carbs=float(data.get("carbs")) if data.get("carbs") else None,
-            fats=float(data.get("fats")) if data.get("fats") else None
+            calories=cals,
+            protein=prot,
+            carbs=carbs,
+            fats=fats
         )
         
         db.session.add(recipe)

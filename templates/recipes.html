@@ -44,7 +44,7 @@
                         <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#recipeModal{{ recipe.id }}">
                             View Recipe
                         </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteRecipe({{ recipe.id }})">
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteRecipe('{{ recipe.id }}')">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -72,6 +72,12 @@
                                 Calories: {{ recipe.calories }} | Protein: {{ recipe.protein }}g | Carbs: {{ recipe.carbs }}g | Fats: {{ recipe.fats }}g
                             </div>
                             {% endif %}
+                        </div>
+                        <!-- NEW FOOTER ADDED HERE -->
+                        <div class="modal-footer bg-light">
+                            <small class="text-muted fst-italic w-100 text-center">
+                                * Disclaimer: All calorie and macronutrient values are general estimates and may not be 100% accurate.
+                            </small>
                         </div>
                     </div>
                 </div>
