@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}My Statistics{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4 text-center"><i class="fas fa-chart-line me-2"></i>Weekly Analytics</h2>
+
+    <div class="row g-4">
+        <!-- CHART 1: Calories Burned vs Consumed -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white fw-bold">
+                    Calories (Last 7 Days)
+                </div>
+                <div class="card-body">
+                    <canvas id="calChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- CHART 2: Macro Breakdown -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white fw-bold">
+                    Macro Distribution (Weekly Total)
+                </div>
+                <div class="card-body d-flex align-items-center justify-content-center position-relative">
+                    <!-- Canvas Container -->
+                    <div style="width: 100%; max-width: 300px;">
+                        <canvas id="macroChart"></canvas>
+                    </div>
+                    
+                    <!-- "No Data" Message (Hidden by default) -->
+                    <div id="noMacroMessage" class="text-center d-none position-absolute top-50 start-50 translate-middle w-100">
+                        <i class="fas fa-cookie-bite fa-3x text-secondary mb-2 opacity-50"></i>
+                        <p class="text-muted small">No recipes added this week.<br>Log some meals to see your macros!</p>
+                    </div>
+                </div>
+                <div class="card-footer bg-white text-muted small text-center">
+                    Based on recipes added this week
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include Chart.js from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+    let data;
+
+    try {
+        // Fetch Data from our Python Backend
+        const res = await fetch('/stats/api/data');
+        if (!res.ok) throw new Error('Network response was not ok');
+        data = await res.json();
+    } catch (err) {
+        console.warn('Fetching stats failed:', err);
+        return; // Stop execution if data fetch fails
+    }
+
+    // 2. Render Bar Chart (Calories)
+    const ctxCal = document.getElementById('calChart').getContext('2d');
+    new Chart(ctxCal, {
+        type: 'bar',
+        data: {
+            labels: data.labels,
+            datasets: [
+                {
+                    label: 'Calories Burned (Workouts)',
+                    data: data.burned,
+                    backgroundColor: 'rgba(52, 58, 64, 0.7)', // Dark grey
+                    borderColor: 'rgba(52, 58, 64, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Calories Consumed (Recipes)',
+                    data: data.consumed,
+                    backgroundColor: 'rgba(25, 135, 84, 0.7)', // Success Green
+                    borderColor: 'rgba(25, 135, 84, 1)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    // 3. Render Doughnut Chart (Macros) with No Data Check
+    const canvasMacro = document.getElementById('macroChart');
+    const noDataMsg = document.getElementById('noMacroMessage');
+    
+    const p = data.macros.protein || 0;
+    const c = data.macros.carbs || 0;
+    const f = data.macros.fats || 0;
+
+    // Check if all macros are zero
+    if (p === 0 && c === 0 && f === 0) {
+        // Hide canvas, show message
+        canvasMacro.style.display = 'none';
+        noDataMsg.classList.remove('d-none');
+    } else {
+        // Render Chart
+        new Chart(canvasMacro, {
+            type: 'doughnut',
+            data: {
+                labels: ['Protein (g)', 'Carbs (g)', 'Fats (g)'],
+                datasets: [{
+                    data: [p, c, f],
+                    backgroundColor: [
+                        '#0dcaf0', // Info Cyan (Protein)
+                        '#ffc107', // Warning Yellow (Carbs)
+                        '#dc3545'  // Danger Red (Fats)
+                    ],
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

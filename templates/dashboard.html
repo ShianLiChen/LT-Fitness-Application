@@ -9,6 +9,7 @@
         <div class="container-fluid py-3">
             <h1 class="display-5 fw-bold">Welcome back, {{ current_user.username }}!</h1>
             <p class="col-md-8 fs-4 text-muted mx-auto">Ready to crush your healthy goals today?</p>
+            
             <div class="d-flex flex-wrap justify-content-center gap-3 mt-4">
                 <!-- WORKOUT BUTTONS -->
                 <a href="/workouts/ui" class="btn btn-dark btn-lg">
@@ -24,6 +25,11 @@
                 </a>
                 <a href="/recipes/ui/create" class="btn btn-outline-success btn-lg">
                     <i class="fas fa-carrot me-2"></i> Find Recipes
+                </a>
+
+                <!-- STATS BUTTON -->
+                <a href="/stats/ui" class="btn btn-warning btn-lg">
+                    <i class="fas fa-chart-pie me-2"></i> Statistics
                 </a>
             </div>
         </div>

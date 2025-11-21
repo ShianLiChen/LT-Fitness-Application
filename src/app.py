@@ -8,6 +8,7 @@ from auth import auth_bp
 from routes.user_routes import user_bp
 from routes.workout_routes import workout_bp
 from routes.recipe_routes import recipe_bp
+from routes.stats_routes import stats_bp
 
 # Flask-JWT-Extended
 from flask_jwt_extended import JWTManager
@@ -36,6 +37,7 @@ def create_app():
     app.register_blueprint(user_bp)
     app.register_blueprint(workout_bp)
     app.register_blueprint(recipe_bp)
+    app.register_blueprint(stats_bp)
 
     @jwt.unauthorized_loader
     def handle_missing_token(err):
