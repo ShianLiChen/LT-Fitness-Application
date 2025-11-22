@@ -69,9 +69,10 @@
                         <thead>
                             <tr>
                                 <th>Exercise</th>
-                                <th width="15%">Sets</th>
-                                <th width="15%">Reps</th>
-                                <th width="15%">Lbs</th>
+                                <th width="10%">Sets</th>
+                                <th width="10%">Reps</th>
+                                <th width="10%">Lbs</th>
+                                <th width="12%">Mins</th> <!-- NEW COLUMN -->
                                 <th>Notes</th>
                                 <th>Action</th>
                             </tr>
@@ -177,13 +178,18 @@ function addToStaging(name, sets, reps, weight, notes) {
     document.getElementById('emptyMsg').style.display = 'none';
     const tbody = document.querySelector('#stagingTable tbody');
     
+    // Default duration is 15 mins
+    const defaultDuration = 15;
+
     const tr = document.createElement('tr');
     tr.innerHTML = `
         <td><input type="text" class="form-control" value="${name}" readonly data-key="exercise_name"></td>
-        <td><input type="number" class="form-control" value="${sets}" data-key="sets"></td>
-        <td><input type="number" class="form-control" value="${reps}" data-key="reps"></td>
-        <td><input type="number" class="form-control" value="${weight}" data-key="weight_lbs"></td>
-        <td><input type="text" class="form-control" value="${notes}" data-key="notes"></td>
+        <td><input type="number" class="form-control" value="${sets || ''}" data-key="sets" placeholder="0"></td>
+        <td><input type="number" class="form-control" value="${reps || ''}" data-key="reps" placeholder="0"></td>
+        <td><input type="number" class="form-control" value="${weight || ''}" data-key="weight_lbs" placeholder="0"></td>
+        <!-- NEW DURATION INPUT -->
+        <td><input type="number" class="form-control" value="${defaultDuration}" data-key="duration_minutes"></td>
+        <td><input type="text" class="form-control" value="${notes || ''}" data-key="notes"></td>
         <td><button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">X</button></td>
     `;
     tbody.appendChild(tr);

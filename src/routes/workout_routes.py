@@ -309,10 +309,20 @@ def create_batch_workouts():
         created_items = []
         
         for item in data:
-            # --- ADDED ESTIMATION LOGIC ---
-            # If user manually enters calories, use it. Otherwise:
-            # Default batch workouts to 15 mins per exercise * 6 cal/min = 90 calories
-            est_cals = 90 
+            # --- UPDATED ESTIMATION LOGIC ---
+            
+            # 1. Extract Duration (Default to 15 mins if missing/empty)
+            try:
+                duration = float(item.get("duration_minutes"))
+            except (TypeError, ValueError):
+                duration = 15.0 # Fallback default
+            
+            # 2. Calculate Calories: Duration * 6 (Approx value for moderate lifting)
+            # If the user somehow sent specific calories, use that. Otherwise calculate.
+            if item.get("calories_burned"):
+                est_cals = float(item.get("calories_burned"))
+            else:
+                est_cals = duration * 6.0
             
             workout = Workout(
                 user_id=user.id,
@@ -321,7 +331,9 @@ def create_batch_workouts():
                 reps=int(item.get("reps", 0)) if item.get("reps") else None,
                 weight_lbs=float(item.get("weight_lbs", 0)) if item.get("weight_lbs") else None,
                 notes=item.get("notes", ""),
-                # Apply estimate to batch items too
+                
+                # Save the new fields
+                duration_minutes=duration,
                 calories_burned=est_cals 
             )
             db.session.add(workout)
