@@ -73,6 +73,7 @@
                                 <th width="10%">Reps</th>
                                 <th width="10%">Lbs</th>
                                 <th width="12%">Mins</th> <!-- NEW COLUMN -->
+                                <th width="12%">Calories</th>
                                 <th>Notes</th>
                                 <th>Action</th>
                             </tr>
@@ -180,6 +181,7 @@ function addToStaging(name, sets, reps, weight, notes) {
     
     // Default duration is 15 mins
     const defaultDuration = 15;
+    const defaultCalories = '';
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -189,6 +191,7 @@ function addToStaging(name, sets, reps, weight, notes) {
         <td><input type="number" class="form-control" value="${weight || ''}" data-key="weight_lbs" placeholder="0"></td>
         <!-- NEW DURATION INPUT -->
         <td><input type="number" class="form-control" value="${defaultDuration}" data-key="duration_minutes"></td>
+        <td><input type="number" class="form-control" value="${defaultCalories}" data-key="calories_burned" placeholder="Optional"></td>
         <td><input type="text" class="form-control" value="${notes || ''}" data-key="notes"></td>
         <td><button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">X</button></td>
     `;
