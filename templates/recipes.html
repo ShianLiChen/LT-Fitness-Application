@@ -35,6 +35,9 @@
                             {% if recipe.protein %}
                                 <span class="badge bg-info text-dark">{{ recipe.protein }}g Prot</span>
                             {% endif %}
+                            {% if recipe.created_at %}
+                                <span class="badge bg-light-purple text-dark">Eaten: {{ recipe.created_at.strftime('%Y-%m-%d') }}</span>
+                            {% endif %}
                         </div>
 
                         <p class="card-text text-truncate small text-muted">{{ recipe.ingredients }}</p>
