@@ -128,7 +128,11 @@ def update_workout(id):
         setattr(workout, key, value)
 
     db.session.commit()
-    return jsonify({"message": "Workout updated", "workout": workout_schema.dump(workout)}), 200
+    workout_date = workout.created_at.strftime("%Y-%m-%d")
+    exercise_name = workout.exercise_name
+    message = f"Workout ({workout_date}): {exercise_name} updated"
+
+    return jsonify({"message": message}), 200
 
 
 @workout_bp.delete("/<int:id>")
