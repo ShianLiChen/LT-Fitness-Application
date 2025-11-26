@@ -28,3 +28,19 @@ class Config:
     JWT_REFRESH_COOKIE_PATH = "/token/refresh"
     JWT_COOKIE_SECURE = False  # set True in production
     JWT_COOKIE_SAMESITE = "Lax"
+
+    # ----------------------------
+    # Email / SMTP settings
+    # ----------------------------
+    MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com")
+    MAIL_PORT = int(os.getenv("MAIL_PORT", 587))
+    MAIL_USE_TLS = os.getenv("MAIL_USE_TLS", "True") == "True"
+    MAIL_USE_SSL = os.getenv("MAIL_USE_SSL", "False") == "True"
+    MAIL_USERNAME = os.getenv("MAIL_USERNAME")  # your email
+    MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")  # your app password
+    MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER", MAIL_USERNAME)
+
+    # ----------------------------
+    # Password reset token settings
+    # ----------------------------
+    PASSWORD_RESET_TOKEN_EXP = int(os.getenv("PASSWORD_RESET_TOKEN_EXP", 3600)) 

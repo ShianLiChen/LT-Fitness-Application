@@ -1,11 +1,16 @@
 # auth/auth_routes.py
-from flask import Blueprint, request, jsonify, make_response
+from flask import Blueprint, request, jsonify, make_response, render_template
 from database import db
 from models.user import User
 from utils.password_utils import hash_password, verify_password
 from schemas.user_schema import UserSchema
 from marshmallow import ValidationError
 from auth.jwt_handler import csrf_protect
+import uuid
+from datetime import datetime, timedelta
+from flask import current_app
+from flask_mail import Message
+from models.password_reset_token import PasswordResetToken
 
 # Flask-JWT-Extended
 from flask_jwt_extended import (
@@ -156,3 +161,80 @@ def change_password():
     db.session.commit()
 
     return jsonify({"message": "Password changed successfully"})
+
+# --------------------
+# Forgot Password: Request Reset
+# --------------------
+@auth_bp.post("/forgot-password")
+def forgot_password():
+    data = request.get_json()
+    email = data.get("email")
+    if not email:
+        return jsonify({"error": "Email is required"}), 400
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        # Don't reveal that email doesn't exist
+        return jsonify({"message": "If this email exists, a reset link has been sent"}), 200
+
+    # Generate token
+    token = str(uuid.uuid4())
+    expires_at = datetime.utcnow() + timedelta(hours=1)
+
+    reset_token = PasswordResetToken(user_id=user.id, token=token, expires_at=expires_at)
+    db.session.add(reset_token)
+    db.session.commit()
+
+    # Send email - change domain for actual deployment
+    reset_url = f"http://127.0.0.1:5000/auth/reset-password?token={token}"
+    msg = Message(
+        "Reset Your Password",
+        sender="cscifitnessproject@gmail.com",
+        recipients=[user.email]
+    )
+    msg.body = f"Click the link to reset your password:\n\n{reset_url}\n\nThis link expires in 1 hour."
+    current_app.mail.send(msg)
+
+    return jsonify({"message": "If this email exists, a reset link has been sent"}), 200
+
+
+# --------------------
+# Reset Password: Submit New Password
+# --------------------
+@auth_bp.post("/reset-password")
+def reset_password():
+    data = request.get_json()
+    token = data.get("token")
+    new_password = data.get("new_password")
+
+    if not token or not new_password:
+        return jsonify({"error": "Token and new password are required"}), 400
+
+    reset_token = PasswordResetToken.query.filter_by(token=token).first()
+
+    if not reset_token or reset_token.used or reset_token.expires_at < datetime.utcnow():
+        return jsonify({"error": "Token expired or invalid"}), 400
+
+    user = User.query.get(reset_token.user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    # Update password
+    user.password_hash = hash_password(new_password)
+    reset_token.used = True
+    db.session.commit()
+
+    return jsonify({"message": "Password has been reset successfully"}), 200
+
+# Show forgot password form
+@auth_bp.get("/forgot-password")
+def forgot_password_page():
+    return render_template("forgot_password.html")
+
+# Show reset password form
+@auth_bp.get("/reset-password")
+def reset_password_page():
+    token = request.args.get("token")
+    if not token:
+        return "Invalid reset link", 400
+    return render_template("reset_password.html", token=token)

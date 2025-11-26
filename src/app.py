@@ -10,6 +10,9 @@ from routes.workout_routes import workout_bp
 from routes.recipe_routes import recipe_bp
 from routes.stats_routes import stats_bp
 
+from flask_mail import Mail
+from itsdangerous import URLSafeTimedSerializer
+
 # Flask-JWT-Extended
 from flask_jwt_extended import JWTManager
 
@@ -50,6 +53,13 @@ def create_app():
     @jwt.invalid_token_loader
     def handle_invalid_token(err):
         return render_template("error.html", message="Invalid token. Please log in again."), 401
+
+    # Initialize Flask-Mail
+    mail = Mail(app)
+    app.mail = mail
+
+    # Token serializer
+    app.serializer = URLSafeTimedSerializer(app.config["SECRET_KEY"])
 
     return app
 
