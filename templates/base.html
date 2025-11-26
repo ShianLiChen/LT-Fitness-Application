@@ -14,7 +14,12 @@
     <div class="container-fluid">
         <a class="navbar-brand" 
             href="{% if current_user %}/dashboard{% else %}/{% endif %}">
-            Fitness Tracker
+            <img src="{{ url_for('static', filename='logo/siteLogo.jpg') }}" 
+                alt="Logo" 
+                width="35" 
+                height="35" 
+                class="d-inline-block align-text-top rounded-circle me-2">
+            LT Fitness Tracker
         </a>
         <div class="collapse navbar-collapse">
             <ul class="navbar-nav ms-auto">
