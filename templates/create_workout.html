@@ -186,12 +186,11 @@ function addToStaging(name, sets, reps, weight, notes) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
         <td><input type="text" class="form-control" value="${name}" readonly data-key="exercise_name"></td>
-        <td><input type="number" class="form-control" value="${sets || ''}" data-key="sets" placeholder="0"></td>
-        <td><input type="number" class="form-control" value="${reps || ''}" data-key="reps" placeholder="0"></td>
-        <td><input type="number" class="form-control" value="${weight || ''}" data-key="weight_lbs" placeholder="0"></td>
-        <!-- NEW DURATION INPUT -->
-        <td><input type="number" class="form-control" value="${defaultDuration}" data-key="duration_minutes"></td>
-        <td><input type="number" class="form-control" value="${defaultCalories}" data-key="calories_burned" placeholder="Optional"></td>
+        <td><input type="number" class="form-control" value="${sets || ''}" data-key="sets" placeholder="0" min="0"></td>
+        <td><input type="number" class="form-control" value="${reps || ''}" data-key="reps" placeholder="0" min="0"></td>
+        <td><input type="number" class="form-control" value="${weight || ''}" data-key="weight_lbs" placeholder="0" min="0"></td>
+        <td><input type="number" class="form-control" value="${defaultDuration}" data-key="duration_minutes" min="0"></td>
+        <td><input type="number" class="form-control" value="${defaultCalories}" data-key="calories_burned" placeholder="Optional" min="0"></td>
         <td><input type="text" class="form-control" value="${notes || ''}" data-key="notes"></td>
         <td><button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">X</button></td>
     `;
