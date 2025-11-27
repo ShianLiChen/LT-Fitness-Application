@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: lunafit_app
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./src:/app/src
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - OLLAMA_HOST=http://host.docker.internal:11434
+      - MYSQL_HOST=db
+      # Pass these from your .env file
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DB=${MYSQL_DB}
+      - SECRET_KEY=${SECRET_KEY}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # --- CHANGED: Wait for DB to be healthy before starting ---
+    depends_on:
+      db:
+        condition: service_healthy
+    # ----------------------------------------------------------
+
+  db:
+    image: mysql:8.0
+    container_name: lunafit_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DB}
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    # --- ADDED: Healthcheck to ensure DB is ready ---
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    # ------------------------------------------------
+
+volumes:
+  db_data:
