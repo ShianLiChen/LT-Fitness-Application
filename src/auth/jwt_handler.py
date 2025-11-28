@@ -15,15 +15,22 @@ def nocache(view):
 def csrf_protect(view):
     @wraps(view)
     def wrapped(*args, **kwargs):
-        # Ensure JWT is present in cookie
+        # If JWT is in Authorization header, skip CSRF check (for tests / header-based auth)
+        auth_header = request.headers.get("Authorization", None)
+        if auth_header and auth_header.startswith("Bearer "):
+            verify_jwt_in_request()  # still ensure JWT is valid
+            return view(*args, **kwargs)
+
+        # Otherwise, do CSRF check (cookie-based)
         verify_jwt_in_request()  # raises error if JWT missing
-        # Get CSRF token sent in header
         header_token = request.headers.get("X-CSRF-TOKEN")
         if not header_token:
             return jsonify({"error": "CSRF token missing"}), 403
-        # Get token stored in JWT
+
         jwt_csrf_token = get_jwt().get("csrf")
         if not jwt_csrf_token or jwt_csrf_token != header_token:
             return jsonify({"error": "CSRF token invalid"}), 403
+
         return view(*args, **kwargs)
+
     return wrapped

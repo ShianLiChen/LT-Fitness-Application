@@ -9,6 +9,7 @@ import requests
 import json
 import random
 import os
+from marshmallow import ValidationError
 
 recipe_bp = Blueprint("recipe", __name__, url_prefix="/recipes")
 recipe_schema = RecipeSchema()
@@ -144,31 +145,36 @@ def save_recipe():
         user_id = int(get_jwt_identity())
         user = User.query.get(user_id)
         data = request.get_json()
+
+        schema = RecipeSchema()
+        validated_data = schema.load(data)
         
         # --- ESTIMATION LOGIC FOR API RECIPES ---
         # If nutrition data is missing (API recipe), generate realistic estimates
-        cals = int(data.get("calories")) if data.get("calories") else random.randint(300, 800)
-        prot = float(data.get("protein")) if data.get("protein") else round(random.uniform(10, 40), 1)
-        carbs = float(data.get("carbs")) if data.get("carbs") else round(random.uniform(20, 80), 1)
-        fats = float(data.get("fats")) if data.get("fats") else round(random.uniform(5, 30), 1)
-        # ----------------------------------------
+        cals = validated_data.get("calories") or random.randint(300, 800)
+        prot = validated_data.get("protein") or round(random.uniform(10, 40), 1)
+        carbs = validated_data.get("carbs") or round(random.uniform(20, 80), 1)
+        fats = validated_data.get("fats") or round(random.uniform(5, 30), 1)
 
-        # Create recipe object
+        # Create recipe
         recipe = Recipe(
             user_id=user.id,
-            title=data.get("title"),
-            ingredients=data.get("ingredients"),
-            instructions=data.get("instructions"),
-            image_url=data.get("image_url"),
+            title=validated_data["title"],
+            ingredients=validated_data.get("ingredients", ""),
+            instructions=validated_data.get("instructions", ""),
+            image_url=validated_data.get("image_url"),
             calories=cals,
             protein=prot,
             carbs=carbs,
             fats=fats
         )
-        
+
         db.session.add(recipe)
         db.session.commit()
-        return jsonify({"message": "Recipe saved", "recipe": recipe.to_dict()}), 201
+        return jsonify({"message": "Recipe saved", "recipe": schema.dump(recipe)}), 201
+
+    except ValidationError as err:
+        return jsonify({"errors": err.messages}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
@@ -184,3 +190,11 @@ def delete_recipe(id):
     db.session.delete(recipe)
     db.session.commit()
     return jsonify({"message": "Recipe deleted"}), 200
+
+@recipe_bp.get("/")
+@jwt_required()
+def list_recipes():
+    user_id = int(get_jwt_identity())
+    recipes = Recipe.query.filter_by(user_id=user_id).all()
+    schema = RecipeSchema(many=True)
+    return jsonify(schema.dump(recipes)), 200

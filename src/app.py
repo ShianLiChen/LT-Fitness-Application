@@ -16,7 +16,7 @@ from itsdangerous import URLSafeTimedSerializer
 # Flask-JWT-Extended
 from flask_jwt_extended import JWTManager
 
-def create_app():
+def create_app(test_config=None):
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
     app = Flask(
@@ -25,6 +25,9 @@ def create_app():
         static_folder=os.path.join(project_root, "static")
     )
     app.config.from_object(Config)
+
+    if test_config:
+        app.config.update(test_config)
 
     # Initialize database
     db.init_app(app)

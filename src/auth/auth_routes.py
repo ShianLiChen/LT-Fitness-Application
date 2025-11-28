@@ -87,7 +87,9 @@ def login():
     )
 
     # Get CSRF token for frontend
-    csrf_token = get_csrf_token(access_token)
+    csrf_token = None
+    if current_app.config.get("JWT_COOKIE_CSRF_PROTECT", True):
+        csrf_token = get_csrf_token(access_token)
 
     # Response with JWT cookie + CSRF token
     resp = make_response(jsonify({
