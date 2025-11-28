@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  # 1. The Web Application
+  web:
+    build: .
+    container_name: lunafit_app
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./src:/app/src
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      # IMPORTANT: Now points to the internal 'ollama' service, not the host
+      - OLLAMA_HOST=http://ollama:11434
+      - MYSQL_HOST=db
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=password123
+      - MYSQL_DB=fitness_app_db
+      - SECRET_KEY=dev_secret_key
+      - JWT_PEPPER=dev_pepper_key
+    depends_on:
+      db:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+
+  # 2. The Database
+  db:
+    image: mysql:8.0
+    container_name: lunafit_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password123
+      MYSQL_DATABASE: fitness_app_db
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # 3. The AI Server (Ollama)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: lunafit_ollama
+    restart: always
+    ports:
+      - "11434:11434" # Expose port to debug
+    volumes:
+      # This saves the models to a Docker volume so we don't download them every time
+      - ollama_models:/root/.ollama
+
+  # 4. The Model Puller (Runs once to download models automatically)
+  ollama-puller:
+    image: ollama/ollama:latest
+    container_name: lunafit_model_puller
+    depends_on:
+      - ollama
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    entrypoint: /bin/sh
+    command: >
+      -c "echo 'Waiting for Ollama server to be active...';
+      sleep 5;
+      echo 'Pulling Luna model (this may take a while)...';
+      ollama pull goosedev/luna;
+      echo 'Pulling Gourmet model...';
+      ollama pull ALIENTELLIGENCE/gourmetglobetrotter;
+      echo 'All models downloaded successfully!';"
+
+volumes:
+  db_data:
+  ollama_models:

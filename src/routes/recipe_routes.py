@@ -8,6 +8,7 @@ from auth.jwt_handler import csrf_protect
 import requests
 import json
 import random
+import os
 from marshmallow import ValidationError
 
 recipe_bp = Blueprint("recipe", __name__, url_prefix="/recipes")
@@ -81,7 +82,7 @@ def search_external_recipes():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# 2. Generate with Ollama (GourmetGlobetrotter)
+# 2. Generate with Ollama (UPDATED FOR DOCKER)
 @recipe_bp.route("/api/generate-ai", methods=["POST"])
 @jwt_required()
 @csrf_protect
@@ -89,7 +90,6 @@ def generate_ai_recipe():
     data = request.get_json()
     user_prompt = data.get("prompt", "")
     
-    # System prompt to ensure valid JSON with nutrition estimates
     system_prompt = (
         "You are a world-class chef and nutritionist. Create a recipe based on the user request. "
         "Return ONLY a JSON object with these fields: "
@@ -106,7 +106,11 @@ def generate_ai_recipe():
 
     try:
         print(f"Connecting to Ollama with model: {payload['model']}...")
-        ollama_url = "http://localhost:11434/api/generate"
+        
+        # --- CHANGED: Use environment variable ---
+        base_url = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
+        ollama_url = f"{base_url}/api/generate"
+        
         response = requests.post(ollama_url, json=payload, timeout=90)
         
         if response.status_code == 200:
@@ -117,7 +121,6 @@ def generate_ai_recipe():
             
     except Exception as e:
         print(f"AI Generation Failed: {str(e)}")
-        # Fallback Simulation for Demo
         import json
         mock_recipe = {
             "title": "Mediterranean Quinoa Salad (Fallback)",
