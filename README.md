@@ -1,5 +1,5 @@
 # CSCI 4230 – Advanced Web Development - Final Project
-## 💪 LT Fitness Tracker - AI-Powered Fitness App
+## 💪 LT Fitness Tracker (AI-Powered Fitness App)
 ### Developers: Shian Li Chen (100813628) & Thanushan Satheeskumar (100784004)
 
 LT Fitness Tracker is a full-stack fitness and nutrition tracker that uses local Artificial Intelligence to generate personalized workout plans and healthy recipes.
