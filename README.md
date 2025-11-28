@@ -2,7 +2,7 @@
 ## Final Project
 ### Authors: Shian Li Chen (100813628), Thanushan Satheeskumar (100784004)
 
-# 🌙 LT Fitness Tracker - AI-Powered Fitness App
+# 💪 LT Fitness Tracker - AI-Powered Fitness App
 
 LT Fitness Tracker is a full-stack fitness and nutrition tracker that uses local Artificial Intelligence to generate personalized workout plans and healthy recipes.
 
@@ -57,7 +57,7 @@ LT Fitness Tracker is a full-stack fitness and nutrition tracker that uses local
    lunafit_model_puller exited with code 0
    \`\`\`
 
-   * *This takes 2-10 minutes depending on your internet speed.*
+   * *This takes 2-10 minutes, depending on your internet speed.*
    * *If you try to use the "Generate Workout" or "AI Chef" buttons before this line appears, the app will use a "Fallback Simulation" (mock data).*
 
 4. **Access the App:**
