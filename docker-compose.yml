@@ -4,7 +4,7 @@ services:
   # 1. The Web Application
   web:
     build: .
-    container_name: lunafit_app
+    container_name: ltfitnesstracker_app
     ports:
       - "5000:5000"
     volumes:
@@ -12,7 +12,6 @@ services:
     environment:
       - FLASK_ENV=development
       - FLASK_DEBUG=1
-      # IMPORTANT: Now points to the internal 'ollama' service, not the host
       - OLLAMA_HOST=http://ollama:11434
       - MYSQL_HOST=db
       - MYSQL_USER=root
@@ -29,7 +28,7 @@ services:
   # 2. The Database
   db:
     image: mysql:8.0
-    container_name: lunafit_db
+    container_name: ltfitnesstracker_db
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: password123
@@ -46,18 +45,17 @@ services:
   # 3. The AI Server (Ollama)
   ollama:
     image: ollama/ollama:latest
-    container_name: lunafit_ollama
+    container_name: ltfitnesstracker_ollama
     restart: always
     ports:
-      - "11434:11434" # Expose port to debug
+      - "11434:11434"
     volumes:
-      # This saves the models to a Docker volume so we don't download them every time
       - ollama_models:/root/.ollama
 
-  # 4. The Model Puller (Runs once to download models automatically)
+  # 4. The Model Puller
   ollama-puller:
     image: ollama/ollama:latest
-    container_name: lunafit_model_puller
+    container_name: ltfitnesstracker_model_puller
     depends_on:
       - ollama
     environment:

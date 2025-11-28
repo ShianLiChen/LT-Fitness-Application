@@ -1,6 +1,6 @@
 {
-  "name": "MyWebSite",
-  "short_name": "MySite",
+  "name": "LT Fitness Tracker",
+  "short_name": "LT Fitness Tracker",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
