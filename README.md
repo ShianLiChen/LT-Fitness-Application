@@ -48,11 +48,11 @@ LT Fitness Tracker is a full-stack fitness and nutrition tracker that uses local
    Docker is automatically downloading two large AI models (`goosedev/luna` and `ALIENTELLIGENCE/gourmetglobetrotter`) in the background.
 
    * **Check your terminal logs.**
-   * You must wait until you see this specific message from the `lunafit_model_puller` service:
+   * You must wait until you see this specific message from the `ltfitnesstracker_model_puller` service:
 
    ```text
-   lunafit_model_puller | All models downloaded successfully!
-   lunafit_model_puller exited with code 0
+   ltfitnesstracker_model_puller | All models downloaded successfully!
+   ltfitnesstracker_model_puller exited with code 0
    ```
 
    * *This takes 2-10 minutes, depending on your internet speed.*
