@@ -1,6 +1,6 @@
 name: LT Fitness Tracker CI
 
-# Trigger this action on push or pull request to these branches
+# Triggers this action on push or pull requests from these branches
 on:
   push:
     branches: [ "main", "TDev" ]
@@ -11,9 +11,13 @@ jobs:
   # JOB 1: Python Code Quality & Testing
   build-and-test:
     runs-on: ubuntu-latest
+
+    # Runs the job on multiple Python versions
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
     
-    # --- NEW SECTION: Define a Service Container ---
-    # This spins up a MySQL server specifically for this job
+    # Creates a MySQL server specifically for this job
     services:
       mysql:
         image: mysql:8.0
@@ -33,10 +37,11 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Set up Python 3.10
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
-        python-version: "3.10"
+        # Uses the version from the matrix above
+        python-version: ${{ matrix.python-version }}
 
     - name: Install Dependencies
       run: |
@@ -46,7 +51,7 @@ jobs:
         pip install pytest
 
     - name: Create Dummy .env file
-      # These credentials MUST match the 'services' section above
+      # These credentials must match the services section above
       run: |
         echo "SECRET_KEY=testing_key" >> .env
         echo "JWT_PEPPER=testing_pepper" >> .env
@@ -57,17 +62,16 @@ jobs:
         echo "MYSQL_DB=fitness_app_test" >> .env
 
     - name: Run Unit Tests
-      # We set the PYTHONPATH so it can find the 'src' module
+      # Sets the PYTHONPATH so it can find the 'src' module
       env:
         PYTHONPATH: src
       run: |
         pytest tests/
 
   # JOB 2: Docker Verification
-  # This ensures your Dockerfile isn't broken
   docker-build-check:
     runs-on: ubuntu-latest
-    needs: build-and-test # Only run if tests pass
+    needs: build-and-test
     
     steps:
     - name: Checkout Code
@@ -77,5 +81,5 @@ jobs:
       uses: docker/setup-buildx-action@v3
 
     - name: Build Docker Image
-      # This builds the image but doesn't run it (verifies syntax/installs)
+      # Builds the image but doesn't run it
       run: docker build . --file Dockerfile --tag lt-fitness-tracker:latest
