@@ -1,6 +1,6 @@
 name: LT Fitness Tracker CI
 
-# Triggers this action on push or pull requests to these branches
+# Trigger this action on push or pull request to these branches
 on:
   push:
     branches: [ "main", "TDev" ]
@@ -12,6 +12,23 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     
+    # --- NEW SECTION: Define a Service Container ---
+    # This spins up a MySQL server specifically for this job
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: fitness_app_test
+        ports:
+          - 3306:3306
+        # Health check ensures the DB is ready before steps run
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -u root -ppassword"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
@@ -25,28 +42,32 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        # Install testing tools (if not in requirements)
         pip install pytest
 
     - name: Create Dummy .env file
+      # These credentials MUST match the 'services' section above
       run: |
         echo "SECRET_KEY=testing_key" >> .env
         echo "JWT_PEPPER=testing_pepper" >> .env
-        echo "MYSQL_HOST=localhost" >> .env
+        echo "MYSQL_HOST=127.0.0.1" >> .env
+        echo "MYSQL_PORT=3306" >> .env
         echo "MYSQL_USER=root" >> .env
         echo "MYSQL_PASSWORD=password" >> .env
         echo "MYSQL_DB=fitness_app_test" >> .env
 
     - name: Run Unit Tests
-      # Runs any tests found in the /tests folder
+      # We set the PYTHONPATH so it can find the 'src' module
       env:
         PYTHONPATH: src
       run: |
         pytest tests/
 
   # JOB 2: Docker Verification
+  # This ensures your Dockerfile isn't broken
   docker-build-check:
     runs-on: ubuntu-latest
-    needs: build-and-test
+    needs: build-and-test # Only run if tests pass
     
     steps:
     - name: Checkout Code
@@ -56,5 +77,5 @@ jobs:
       uses: docker/setup-buildx-action@v3
 
     - name: Build Docker Image
-      # Builds the image without running
+      # This builds the image but doesn't run it (verifies syntax/installs)
       run: docker build . --file Dockerfile --tag lt-fitness-tracker:latest
