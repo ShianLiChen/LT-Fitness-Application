@@ -5,8 +5,7 @@ services:
   web:
     build: .
     container_name: ltfitnesstracker_app
-    ports:
-      - "5000:5000"
+    restart: always
     volumes:
       - ./src:/app/src
     environment:
@@ -25,7 +24,19 @@ services:
       ollama:
         condition: service_started
 
-  # 2. The Database
+  # 2. Nginx (The Traffic Director)
+  nginx:
+    image: nginx:latest
+    container_name: ltfitnesstracker_nginx
+    restart: always
+    ports:
+      - "80:80" # Standard HTTP port
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - web
+
+  # 3. The Database
   db:
     image: mysql:8.0
     container_name: ltfitnesstracker_db
@@ -42,7 +53,7 @@ services:
       timeout: 20s
       retries: 10
 
-  # 3. The AI Server (Ollama)
+  # 4. The AI Server (Ollama)
   ollama:
     image: ollama/ollama:latest
     container_name: ltfitnesstracker_ollama
@@ -52,7 +63,7 @@ services:
     volumes:
       - ollama_models:/root/.ollama
 
-  # 4. The Model Puller
+  # 5. The Model Puller
   ollama-puller:
     image: ollama/ollama:latest
     container_name: ltfitnesstracker_model_puller
