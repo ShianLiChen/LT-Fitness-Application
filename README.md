@@ -74,6 +74,10 @@ LT Fitness Tracker is a full-stack fitness and nutrition tracker that uses local
 
 ## ❓ Troubleshooting
 
+* **"Exercise Search returns limited results" or "External API Failed":**
+  * The external API provider (API Ninjas) frequently disables the free tier for the Exercises endpoint ("This endpoint is currently down for free users").
+  * When this happens, the app automatically switches to Local Fallback Mode. You will still see search results, but they are limited to a curated list of common exercises (e.g., Bench Press, Squats, Running) to ensure the app remains usable for demos.
+
 * **"Ports are not available":**
   * This means you have a local MySQL running on port 3306. Stop your local MySQL service or edit `docker-compose.yml` to map ports differently (e.g., `3307:3306`).
 
