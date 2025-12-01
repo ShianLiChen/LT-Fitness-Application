@@ -69,7 +69,7 @@ pydantic==2.11.9
 pydantic_core==2.33.2
 Pygments==2.19.2
 PyJWT==2.10.1
-pylsqpack==0.3.22
+pylsqpack==0.3.23
 pymongo==4.15.1
 PyMySQL==1.1.2
 pynose==1.5.5
