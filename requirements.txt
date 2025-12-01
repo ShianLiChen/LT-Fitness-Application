@@ -56,7 +56,7 @@ packaging==25.0
 parameterized==0.9.0
 parse==1.20.2
 parse_type==0.6.6
-pdbp==1.7.1
+pdbp==1.8.1
 pillow==12.0.0
 platformdirs==4.5.0
 pluggy==1.6.0
