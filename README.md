@@ -14,6 +14,10 @@ LT Fitness Tracker is a full-stack fitness and nutrition tracker that uses local
 
 * **Recipe Cookbook:** Search TheMealDB or ask the "Gourmet" AI for nutritional recipes.
 
+* **AI Recipe Generator:** Ask the AI to create a recipe with different ingredients (e.g., "Dinner with chicken and pasta"). 
+
+  * *Estimated macronutrients are provided by the AI as well.*
+
 * **Analytics Dashboard:** Visualize your calories burned vs. consumed and macronutrient breakdown.
 
 * **Fully Dockerized:** Runs the Frontend, Backend, Database, and AI Server with a single command.
