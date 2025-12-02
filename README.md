@@ -4,6 +4,8 @@
 
 LT Fitness Tracker is a full-stack fitness and nutrition tracker that uses local Artificial Intelligence to generate personalized workout plans and healthy recipes.
 
+**You can check out the live site here: [https://ltfitnesstracker.online](https://ltfitnesstracker.online)**
+
 ## 🚀 Features
 
 * **Workout Logger:** Track exercises, sets, reps, and weight.
@@ -60,8 +62,39 @@ LT Fitness Tracker is a full-stack fitness and nutrition tracker that uses local
 
 4. **Access the App:**
 
-   * Open your browser to: [**http://localhost:5000**](http://localhost:5000) or [**http://127.0.0.1:5000**](http://127.0.0.1:5000) (**Note:** If neither work, try [**http://localhost:80**](http://localhost:80))
+   * Open your browser to [**http://localhost:5000**](http://localhost:5000), [**http://127.0.0.1:5000**](http://127.0.0.1:5000), or [**http://localhost:80**](http://localhost:80)
+      - **Note:** This will depend on the configuration of your terminal and working environment
    * Click **Register** to create a new account (The database starts empty).
+
+## 🌐 Deployment Documentation
+
+The application is deployed live using a containerized approach on a Virtual Private Server (VPS).
+
+### Infrastructure Stack
+* **Hosting Provider:** Hostinger (KVM 2 VPS - 8GB RAM to support AI models).
+* **Domain Management:** NameCheap (DNS pointed to Hostinger VPS IP).
+* **Containerization:** Docker & Docker Compose.
+* **Web Server:** Nginx (Reverse Proxy acting as the gateway).
+* **SSL/Security:** Certbot (Let's Encrypt) for HTTPS.
+
+### Deployment Process (Steps Taken)
+
+1. **Server Provisioning:**
+   * Provisioned an Ubuntu 24.04 VPS on Hostinger.
+   * Installed Docker Engine and Docker Compose.
+
+2. **DNS Configuration:**
+   * Purchased `ltfitnesstracker.online` via NameCheap.
+   * Configured **A Records** in DNS settings to point `@` and `www` to the VPS IP address.
+
+3. **Production Configuration:**
+   * Configured `nginx.conf` to reverse proxy traffic from Port 80/443 -> Flask Port 5000.
+   * Created a production `.env` file on the server with secure keys and `FLASK_ENV=production`.
+   * Set `JWT_COOKIE_SECURE=True` to ensure cookies are only sent over HTTPS.
+
+4. **SSL Certification:**
+   * Used the **Certbot** Docker container to generate SSL certificates.
+   * Configured Nginx to force redirect all HTTP traffic to HTTPS.
 
 ## 🏗️ Architecture
 
