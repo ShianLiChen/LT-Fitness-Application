@@ -96,6 +96,12 @@ The application is deployed live using a containerized approach on a Virtual Pri
    * Used the **Certbot** Docker container to generate SSL certificates.
    * Configured Nginx to force redirect all HTTP traffic to HTTPS.
 
+## ⚡ Application Performance
+
+We analyzed the application's performance using **Google PageSpeed Insights** to ensure a fast and responsive user experience. The application achieves high scores due to efficient containerization and Nginx routing.
+* [View Desktop Analysis](https://pagespeed.web.dev/analysis/https-ltfitnesstracker-online/2ncec0ib1l?form_factor=desktop)
+* [View Mobile Analysis](https://pagespeed.web.dev/analysis/https-ltfitnesstracker-online/2ncec0ib1l?form_factor=mobile)
+
 ## 🏗️ Architecture
 
 **Chosen Architecture:** Monolithic MVC with modular service containers.  
