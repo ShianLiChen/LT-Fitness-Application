@@ -24,19 +24,17 @@ def create_app(test_config=None):
         template_folder=os.path.join(project_root, "templates"),
         static_folder=os.path.join(project_root, "static")
     )
-    app.config.from_object(Config)
 
     if test_config:
         app.config.update(test_config)
+    else:
+        app.config.from_object(Config)
 
     # Initialize database
     db.init_app(app)
 
     # Initialize JWT
     jwt = JWTManager(app)
-
-    with app.app_context():
-        db.create_all()
 
     # Register blueprints
     app.register_blueprint(auth_bp)
@@ -66,7 +64,8 @@ def create_app(test_config=None):
 
     return app
 
-app = create_app()
-
 if __name__ == "__main__":
+    app = create_app()
+    with app.app_context():
+        db.create_all()
     app.run(host="0.0.0.0", debug=True)
