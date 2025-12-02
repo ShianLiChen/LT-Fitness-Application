@@ -1,0 +1,24 @@
+[flake8]
+# Maximum line length to allow for readability (default PEP 8 is 79)
+max-line-length = 120
+
+# Ignore specific warnings
+# E402: imports not at top (needed for sys.path hack in conftest.py)
+# W503: line break before binary operator (PEP 8 allows W504 style)
+# E203: whitespace before ':' in slicing
+ignore = E402, W503, E203
+
+# Exclude auto-generated or irrelevant directories
+exclude =
+    __pycache__,
+    .pytest_cache,
+    htmlcov,
+    .venv,
+    .git,
+    .github,
+    nginx,
+    static,
+    templates
+
+# Show statistics summary after linting
+statistics = True

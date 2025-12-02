@@ -61,6 +61,18 @@ jobs:
         echo "MYSQL_PASSWORD=password" >> .env
         echo "MYSQL_DB=fitness_app_test" >> .env
 
+    - name: Start Flask App
+      run: |
+        export FLASK_ENV=testing
+        flask run --host=0.0.0.0 --port 5000 &
+
+    - name: Wait for server
+      run: |
+        until curl -s http://127.0.0.1:5000; do
+          echo "Waiting for Flask..."
+          sleep 2
+        done
+        
     - name: Run Unit Tests
       # Sets the PYTHONPATH so it can find the 'src' module
       env:

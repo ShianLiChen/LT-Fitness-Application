@@ -4,16 +4,32 @@ import os
 
 BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:5000")
 
+
 class TestEndToEndAuth(BaseCase):
+    """
+    End-to-end Selenium tests for user authentication flows:
+    - Registration
+    - Login
+    - Profile viewing
+    - Password change
+    - Logout
+    """
 
     def generate_credentials(self):
+        """
+        Generate a unique set of credentials for testing.
+        Returns: (username, email, password)
+        """
         username = "user_" + uuid.uuid4().hex[:6]
         email = f"{username}@test.com"
         password = "Password123!"
         return username, email, password
 
     def wait_for_url_contains(self, substring, timeout=10):
-        """Helper function to wait until current URL contains substring"""
+        """
+        Helper function to wait until current URL contains a substring.
+        Raises an Exception if timeout is reached.
+        """
         import time
         end_time = time.time() + timeout
         while time.time() < end_time:
@@ -23,12 +39,20 @@ class TestEndToEndAuth(BaseCase):
         raise Exception(f"URL did not contain '{substring}' after {timeout} seconds.")
 
     def test_register_login_profile_logout(self):
+        """
+        Full end-to-end test:
+        1. Register a new user
+        2. Login with the new user
+        3. View the profile page
+        4. Change the password
+        5. Logout
+        """
         username, email, password = self.generate_credentials()
         new_pw = "NewPassword456!"
 
-        # ------------------
+        # -------------------------
         # Register
-        # ------------------
+        # -------------------------
         self.open(f"{BASE_URL}/register")
         self.wait_for_element("#username")
         self.type("#username", username)
@@ -39,29 +63,27 @@ class TestEndToEndAuth(BaseCase):
         self.wait_for_element("#registerMessage")
         self.assert_text("Redirecting", "#registerMessage")
 
-        # ------------------
+        # -------------------------
         # Login
-        # ------------------
+        # -------------------------
         self.open(f"{BASE_URL}/login")
         self.wait_for_element("#username")
         self.type("#username", username)
         self.type("#password", password)
         self.click("button[type='submit']")
-        
-        # Wait until the URL contains /dashboard
         self.wait_for_url_contains("/dashboard", timeout=15)
 
-        # ------------------
+        # -------------------------
         # Profile Page
-        # ------------------
+        # -------------------------
         self.open(f"{BASE_URL}/profile")
         self.wait_for_element("#profileCard")
         self.assert_element("#username")
         self.assert_element("#email")
 
-        # ------------------
+        # -------------------------
         # Change Password
-        # ------------------
+        # -------------------------
         self.wait_for_element("#oldPassword")
         self.type("#oldPassword", password)
         self.type("#newPassword", new_pw)
@@ -70,9 +92,9 @@ class TestEndToEndAuth(BaseCase):
         self.wait_for_element("#changePasswordMessage")
         self.assert_text("success", "#changePasswordMessage")
 
-        # ------------------
+        # -------------------------
         # Logout
-        # ------------------
+        # -------------------------
         self.wait_for_element("#navbarDropdown")
         self.click("#navbarDropdown")
         self.wait_for_element("#logoutBtn")

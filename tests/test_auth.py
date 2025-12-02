@@ -1,24 +1,43 @@
-import json
 from datetime import datetime, timedelta
+
 from utils.password_utils import verify_password
 from models.user import User
 from models.password_reset_token import PasswordResetToken
+
 
 # -------------------------
 # Registration Tests
 # -------------------------
 def test_register_success(client, db):
-    payload = {"username": "newuser", "email": "newuser@test.com", "password": "password123"}
+    """
+    Test successful registration of a new user.
+    Verifies that the response status is 201 and a success message is returned.
+    """
+    payload = {
+        "username": "newuser",
+        "email": "newuser@test.com",
+        "password": "password123",
+    }
     resp = client.post("/auth/register", json=payload)
     assert resp.status_code == 201
     assert resp.get_json()["message"] == "User registered successfully"
 
+
 def test_register_missing_fields(client):
+    """
+    Test registration with missing required fields.
+    Expects a 400 response with an appropriate error message.
+    """
     resp = client.post("/auth/register", json={"username": "user"})
     assert resp.status_code == 400
     assert "Invalid input" in resp.get_json()["error"]
 
+
 def test_register_existing_user(client, test_user):
+    """
+    Test registration attempt with a user that already exists.
+    Should return a 400 status and an error indicating user already exists.
+    """
     payload = {"username": "testuser", "email": "test@test.com", "password": "secret"}
     resp = client.post("/auth/register", json=payload)
     assert resp.status_code == 400
@@ -29,6 +48,10 @@ def test_register_existing_user(client, test_user):
 # Login Tests
 # -------------------------
 def test_login_success(client, test_user):
+    """
+    Test successful login for a valid user.
+    Verifies response status 200 and that user info and csrf_token are returned.
+    """
     payload = {"username": "testuser", "password": "secret"}
     resp = client.post("/auth/login", json=payload)
     assert resp.status_code == 200
@@ -36,12 +59,22 @@ def test_login_success(client, test_user):
     assert data["user"]["username"] == "testuser"
     assert "csrf_token" in data
 
+
 def test_login_missing_fields(client):
+    """
+    Test login attempt with missing fields.
+    Should return 400 and an appropriate error message.
+    """
     resp = client.post("/auth/login", json={"username": ""})
     assert resp.status_code == 400
     assert "Missing username or password" in resp.get_json()["error"]
 
+
 def test_login_invalid_credentials(client):
+    """
+    Test login attempt with invalid credentials.
+    Expects a 401 Unauthorized response.
+    """
     resp = client.post("/auth/login", json={"username": "nonexistent", "password": "wrong"})
     assert resp.status_code == 401
 
@@ -50,12 +83,21 @@ def test_login_invalid_credentials(client):
 # Protected User Info Tests
 # -------------------------
 def test_me_protected(client, test_user, auth_headers):
+    """
+    Test access to /auth/me endpoint with valid authorization.
+    Verifies that user info is returned correctly.
+    """
     headers = auth_headers(test_user.id)
     resp = client.get("/auth/me", headers=headers)
     assert resp.status_code == 200
     assert resp.get_json()["user"]["username"] == test_user.username
 
+
 def test_me_unauthorized(client):
+    """
+    Test access to /auth/me endpoint without authorization.
+    Should return 401 Unauthorized.
+    """
     resp = client.get("/auth/me")
     assert resp.status_code == 401
 
@@ -64,14 +106,24 @@ def test_me_unauthorized(client):
 # Change Password Tests
 # -------------------------
 def test_change_password_success(client, test_user, auth_headers, db):
+    """
+    Test changing password with correct current password.
+    Verifies that password is updated in the database.
+    """
     headers = auth_headers(test_user.id)
     payload = {"old_password": "secret", "new_password": "newsecret"}
     resp = client.post("/auth/change-password", json=payload, headers=headers)
     assert resp.status_code == 200
+
     db_user = User.query.get(test_user.id)
     assert verify_password("newsecret", db_user.password_hash)
 
+
 def test_change_password_incorrect_old(client, test_user, auth_headers):
+    """
+    Test changing password with incorrect current password.
+    Should return 400 with an error message.
+    """
     headers = auth_headers(test_user.id)
     payload = {"old_password": "wrong", "new_password": "newpass"}
     resp = client.post("/auth/change-password", json=payload, headers=headers)
@@ -83,21 +135,35 @@ def test_change_password_incorrect_old(client, test_user, auth_headers):
 # Forgot Password & Reset Password Tests
 # -------------------------
 def test_forgot_password_no_email(client):
+    """
+    Test forgot-password endpoint with no email provided.
+    Should return 400 and an error message.
+    """
     resp = client.post("/auth/forgot-password", json={})
     assert resp.status_code == 400
     assert "Email is required" in resp.get_json()["error"]
 
+
 def test_forgot_password_nonexistent_email(client):
+    """
+    Test forgot-password for an email that does not exist.
+    Should still return 200 for security reasons.
+    """
     resp = client.post("/auth/forgot-password", json={"email": "missing@test.com"})
     assert resp.status_code == 200
     assert "reset link has been sent" in resp.get_json()["message"]
 
+
 def test_reset_password_success(client, test_user, db):
+    """
+    Test resetting password with a valid token.
+    Verifies that the password is updated and the token is marked as used.
+    """
     token_str = "testtoken123"
     token = PasswordResetToken(
         user_id=test_user.id,
         token=token_str,
-        expires_at=datetime.utcnow() + timedelta(hours=1)
+        expires_at=datetime.utcnow() + timedelta(hours=1),
     )
     db.session.add(token)
     db.session.commit()
@@ -107,19 +173,28 @@ def test_reset_password_success(client, test_user, db):
     assert resp.status_code == 200
 
     db_user = User.query.get(test_user.id)
-    from utils.password_utils import verify_password
     assert verify_password("newpass123", db_user.password_hash)
 
     db.session.refresh(token)
     assert token.used
 
+
 def test_reset_password_invalid_token(client):
+    """
+    Test resetting password with an invalid token.
+    Should return 400 with an appropriate error message.
+    """
     payload = {"token": "invalid", "new_password": "pass"}
     resp = client.post("/auth/reset-password", json=payload)
     assert resp.status_code == 400
     assert "Token expired or invalid" in resp.get_json()["error"]
 
+
 def test_reset_password_missing_fields(client):
+    """
+    Test resetting password with missing token or password.
+    Should return 400 with an appropriate error message.
+    """
     resp = client.post("/auth/reset-password", json={"token": "abc"})
     assert resp.status_code == 400
     assert "Token and new password are required" in resp.get_json()["error"]
