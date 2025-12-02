@@ -397,6 +397,10 @@ Provides:
 
 ## ❓ Troubleshooting
 
+* **"Recipe AI Generator fails or times out on Live Site":**
+  * The Recipe AI model (\`gourmetglobetrotter\`) is resource-intensive. 
+  * While the production server (VPS) meets minimum requirements (8GB RAM), heavy load may cause this specific model to timeout or fail due to memory constraints compared to a powerful local development machine. If this happens, the app will return a fallback recipe.
+
 * **"Exercise Search returns limited results" or "External API Failed":**
   * The external API provider (API Ninjas) frequently disables the free tier for the Exercises endpoint ("This endpoint is currently down for free users").
   * When this happens, the app automatically switches to Local Fallback Mode. You will still see search results, but they are limited to a curated list of common exercises (e.g., Bench Press, Squats, Running) to ensure the app remains usable for demos.
