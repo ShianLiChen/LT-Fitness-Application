@@ -1,6 +1,6 @@
-# ====================================================
+# ----------------------------------------------------
 # API NINJAS PROXY (SUCCESS)
-# ====================================================
+# ----------------------------------------------------
 def test_proxy_search_exercises_success(client, test_user, auth_headers, mocker):
     """
     Test that the API Ninjas proxy returns expected exercise data when
@@ -26,9 +26,9 @@ def test_proxy_search_exercises_success(client, test_user, auth_headers, mocker)
     assert data[0]["name"] == "Bench Press"
 
 
-# ====================================================
+# ----------------------------------------------------
 # API NINJAS PROXY (FALLBACK MODE)
-# ====================================================
+# ----------------------------------------------------
 def test_proxy_search_exercises_fallback(client, test_user, auth_headers, mocker):
     """
     Test that the API Ninjas proxy returns fallback data when the
@@ -52,9 +52,9 @@ def test_proxy_search_exercises_fallback(client, test_user, auth_headers, mocker
     assert len(data) > 0
 
 
-# ====================================================
+# ----------------------------------------------------
 # OLLAMA AI PROXY (SUCCESS)
-# ====================================================
+# ----------------------------------------------------
 def test_generate_workout_ai_success(client, test_user, auth_headers, mocker):
     """
     Test that the Ollama AI proxy successfully returns AI-generated
@@ -84,9 +84,9 @@ def test_generate_workout_ai_success(client, test_user, auth_headers, mocker):
     assert "AI Workout" in data["response"]
 
 
-# ====================================================
+# ----------------------------------------------------
 # OLLAMA AI PROXY (FALLBACK MODE)
-# ====================================================
+# ----------------------------------------------------
 def test_generate_workout_ai_fallback(client, test_user, auth_headers, mocker):
     """
     Test that the Ollama AI proxy returns fallback data when the
