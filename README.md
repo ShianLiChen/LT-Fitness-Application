@@ -83,3 +83,6 @@ LT Fitness Tracker is a full-stack fitness and nutrition tracker that uses local
 
 * **"Docker DesktopLinuxEngine... system cannot find the file":**
   * Docker Desktop is not running. Open the Docker Desktop app and wait for the green status bar.
+
+* **"Forgot Password Functionality not working":**
+  * User needs to be registered and the email you are entering into the forgot password page needs to be in the database user table. If the email is not found in the database table the email will not send. 

@@ -44,3 +44,5 @@ class Config:
     # Password reset token settings
     # ----------------------------
     PASSWORD_RESET_TOKEN_EXP = int(os.getenv("PASSWORD_RESET_TOKEN_EXP", 3600)) 
+
+    APP_URL = os.getenv("APP_URL", "http://127.0.0.1:5000")

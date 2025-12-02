@@ -1,5 +1,5 @@
 # auth/auth_routes.py
-from flask import Blueprint, request, jsonify, make_response, render_template
+from flask import Blueprint, request, jsonify, make_response, render_template, url_for
 from database import db
 from models.user import User
 from utils.password_utils import hash_password, verify_password
@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 from flask import current_app
 from flask_mail import Message
 from models.password_reset_token import PasswordResetToken
+import os
 
 # Flask-JWT-Extended
 from flask_jwt_extended import (
@@ -188,14 +189,19 @@ def forgot_password():
     db.session.commit()
 
     # Send email - change domain for actual deployment
-    reset_url = f"http://127.0.0.1:5000/auth/reset-password?token={token}"
+    reset_url = os.getenv("APP_URL") + url_for("auth.reset_password_page", token=token)
     msg = Message(
         "Reset Your Password",
         sender="cscifitnessproject@gmail.com",
         recipients=[user.email]
     )
     msg.body = f"Click the link to reset your password:\n\n{reset_url}\n\nThis link expires in 1 hour."
-    current_app.mail.send(msg)
+    try:
+        current_app.mail.send(msg)
+        current_app.logger.info("Password reset email sent to %s", user.email)
+    except Exception as e:
+        current_app.logger.error("EMAIL FAILED: %s", str(e))
+        return jsonify({"error": "Email could not be sent"}), 500
 
     return jsonify({"message": "If this email exists, a reset link has been sent"}), 200
 
