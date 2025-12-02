@@ -4,14 +4,20 @@
 
 {% block content %}
 <div class="container py-4">
-    <!-- Welcome Hero Section -->
+
+    <!-- -------------------------
+         Welcome Hero Section
+    ------------------------- -->
     <div class="p-5 mb-4 bg-light rounded-3 shadow-sm border text-center">
         <div class="container-fluid py-3">
             <h1 class="display-5 fw-bold">Welcome back, {{ current_user.username }}!</h1>
             <p class="col-md-8 fs-4 text-muted mx-auto">Ready to crush your healthy goals today?</p>
             
+            <!-- -------------------------
+                 Quick Action Buttons
+            ------------------------- -->
             <div class="d-flex flex-wrap justify-content-center gap-3 mt-4">
-                <!-- WORKOUT BUTTONS -->
+                <!-- Workout Buttons -->
                 <a href="/workouts/ui" class="btn btn-dark btn-lg">
                     <i class="fas fa-dumbbell me-2"></i> Workouts
                 </a>
@@ -19,7 +25,7 @@
                     <i class="fas fa-plus me-2"></i> Log Workout
                 </a>
 
-                <!-- RECIPE BUTTONS -->
+                <!-- Recipe Buttons -->
                 <a href="/recipes/ui" class="btn btn-success btn-lg">
                     <i class="fas fa-utensils me-2"></i> Cookbook
                 </a>
@@ -27,7 +33,7 @@
                     <i class="fas fa-carrot me-2"></i> Find Recipes
                 </a>
 
-                <!-- STATS BUTTON -->
+                <!-- Statistics Button -->
                 <a href="/stats/ui" class="btn btn-warning btn-lg">
                     <i class="fas fa-chart-pie me-2"></i> Statistics
                 </a>
@@ -35,8 +41,11 @@
         </div>
     </div>
 
-    <!-- Workouts and Nutrition Row (Side by Side) -->
+    <!-- -------------------------
+         Workouts and Nutrition Row
+    ------------------------- -->
     <div class="row align-items-md-stretch mb-4">
+
         <!-- Workouts Card -->
         <div class="col-md-6 mb-3">
             <div class="h-100 p-4 text-bg-dark rounded-3">
@@ -62,7 +71,9 @@
         </div>
     </div>
 
-    <!-- Profile Card -->
+    <!-- -------------------------
+         Profile Section
+    ------------------------- -->
     <div class="row">
         <div class="col-12">
             <div class="h-100 p-4 bg-body-tertiary border rounded-3">
@@ -72,5 +83,6 @@
             </div>
         </div>
     </div>
+
 </div>
 {% endblock %}

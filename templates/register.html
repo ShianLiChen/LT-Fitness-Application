@@ -1,8 +1,17 @@
 {% extends "base.html" %}
+
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-5">
+
+        <!-- -------------------------
+             Register Header
+        ------------------------- -->
         <h2 class="mb-4">Register</h2>
+
+        <!-- -------------------------
+             Registration Form
+        ------------------------- -->
         <form id="registerForm">
             <div class="mb-3">
                 <label for="username" class="form-label">Username</label>
@@ -22,12 +31,24 @@
             </div>
             <button type="submit" class="btn btn-success">Register</button>
         </form>
+
+        <!-- -------------------------
+             Login Redirect / Messages
+        ------------------------- -->
         <p class="mt-3">Already have an account? <a href="/login">Login here</a></p>
         <div id="registerMessage" class="mt-2"></div>
+
     </div>
 </div>
 
 <script>
+/**
+ * @description Handles the registration form submission.
+ * - Validates passwords match
+ * - Sends POST request to register endpoint
+ * - Displays success/error messages
+ * - Redirects to login page on successful registration
+ */
 document.getElementById('registerForm').addEventListener('submit', async function(e){
     e.preventDefault();
 
@@ -35,13 +56,18 @@ document.getElementById('registerForm').addEventListener('submit', async functio
     const confirmPassword = document.getElementById('confirmPassword').value;
     const messageDiv = document.getElementById('registerMessage');
 
-    // Check password match
+    // -------------------------
+    // Validate password match
+    // -------------------------
     if(password !== confirmPassword){
         messageDiv.className = 'alert alert-danger';
         messageDiv.innerText = "Passwords do not match.";
         return;
     }
 
+    // -------------------------
+    // Send registration request
+    // -------------------------
     const response = await fetch('/auth/register', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -54,21 +80,30 @@ document.getElementById('registerForm').addEventListener('submit', async functio
 
     const data = await response.json();
 
+    // -------------------------
+    // Handle response
+    // -------------------------
     if(response.status === 201){
         messageDiv.className = 'alert alert-success';
         messageDiv.innerText = data.message + " Redirecting to login...";
-        // Redirect to login after 2 seconds
+        // Redirect to login after 1 second
         setTimeout(() => window.location.href = '/login', 1000);
     } else {
         messageDiv.className = 'alert alert-danger';
         messageDiv.innerText = data.error || 'Registration failed';
     }
 });
+
+/**
+ * @description Clears the registration form inputs if the page is loaded
+ * from the back/forward cache (bfcache) to prevent stale values.
+ */
 window.addEventListener('pageshow', function(event) {
-    if (event.persisted) { // true if coming from bfcache (back button)
+    if (event.persisted) {
         const registerForm = document.getElementById('registerForm');
         if (registerForm) registerForm.reset();
     }
 });
 </script>
+
 {% endblock %}

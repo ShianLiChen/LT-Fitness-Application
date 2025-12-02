@@ -9,6 +9,9 @@
         </a>
     </div>
 
+    <!-- -------------------------
+         Workout Table
+    ------------------------- -->
     <div class="card shadow-sm">
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -69,7 +72,10 @@
         </div>
     </div>
 </div>
-<!-- Edit Workout Modal -->
+
+<!-- -------------------------
+     Edit Workout Modal
+------------------------- -->
 <div class="modal fade" id="editWorkoutModal" tabindex="-1">
   <div class="modal-dialog">
     <form class="modal-content" onsubmit="updateWorkout(event)">
@@ -79,38 +85,40 @@
       </div>
       <div class="modal-body">
 
+        <!-- Hidden ID Field -->
         <input type="hidden" id="edit-id">
 
+        <!-- Exercise Name -->
         <div class="mb-2">
           <label>Exercise</label>
           <input class="form-control" id="edit-exercise" required />
         </div>
 
+        <!-- Sets / Reps / Weight -->
         <div class="mb-2">
           <label>Sets</label>
           <input class="form-control" type="number" id="edit-sets" min="0">
         </div>
-
         <div class="mb-2">
           <label>Reps</label>
           <input class="form-control" type="number" id="edit-reps" min="0">
         </div>
-
         <div class="mb-2">
           <label>Weight (lbs)</label>
           <input class="form-control" type="number" step="0.1" id="edit-weight" min="0">
         </div>
 
+        <!-- Duration / Calories -->
         <div class="mb-2">
           <label>Duration (minutes)</label>
           <input class="form-control" type="number" step="0.1" id="edit-duration" min="0">
         </div>
-
         <div class="mb-2">
           <label>Calories Burned</label>
           <input class="form-control" type="number" step="0.1" id="edit-calories" min="0">
         </div>
 
+        <!-- Notes -->
         <div class="mb-2">
           <label>Notes</label>
           <textarea class="form-control" id="edit-notes"></textarea>
@@ -126,30 +134,38 @@
 </div>
 
 <script>
+/**
+ * @description Deletes a workout entry by ID
+ * Sends a DELETE request to `/workouts/:id` and reloads the page on success.
+ * @param {string} id - The workout ID to delete
+ */
 async function deleteWorkout(id) {
     if(!confirm("Are you sure you want to delete this entry?")) return;
 
     try {
         const res = await fetch(`/workouts/${id}`, {
             method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': window.csrfToken
-            }
+            headers: { 'X-CSRF-TOKEN': window.csrfToken }
         });
-        
-        if(res.ok) {
-            window.location.reload();
-        } else {
-            alert("Failed to delete workout");
-        }
+        if(res.ok) window.location.reload();
+        else alert("Failed to delete workout");
     } catch(err) {
         console.error(err);
     }
 }
+
+/**
+ * @description Initializes the edit modal instance on DOM load
+ */
 let editModal;
 document.addEventListener("DOMContentLoaded", function() {
     editModal = new bootstrap.Modal(document.getElementById("editWorkoutModal"));
 });
+
+/**
+ * @description Populates and shows the edit workout modal
+ * @param {HTMLElement} buttonEl - The button element that was clicked
+ */
 function handleEditClick(buttonEl) {
     try {
         document.getElementById("edit-id").value = buttonEl.dataset.id;
@@ -161,16 +177,18 @@ function handleEditClick(buttonEl) {
         document.getElementById("edit-calories").value = buttonEl.dataset.calories || "";
         document.getElementById("edit-notes").value = buttonEl.dataset.notes || "";
 
-        // Create modal instance here
-        const modalEl = document.getElementById("editWorkoutModal");
-        const modal = new bootstrap.Modal(modalEl);
-        modal.show();
+        editModal.show();
     } catch (err) {
         console.error("EDIT FAILURE:", err);
         alert("Unable to open edit form");
     }
 }
 
+/**
+ * @description Updates a workout entry with form data
+ * Sends a PUT request to `/workouts/:id` with updated values.
+ * @param {Event} e - The form submit event
+ */
 async function updateWorkout(e) {
     e.preventDefault();
 
@@ -196,9 +214,9 @@ async function updateWorkout(e) {
         });
 
         if (res.ok) {
-            const data = await res.json();   // parse the JSON response
+            const data = await res.json();
             editModal.hide();
-            alert(data.message);             // show the custom message
+            alert(data.message);
             window.location.reload();
         } else {
             const data = await res.json().catch(() => ({}));

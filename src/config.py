@@ -1,13 +1,38 @@
+# src/config.py
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
-class Config:
-    SECRET_KEY = os.getenv("SECRET_KEY")  
-    JWT_SECRET_KEY = os.getenv("SECRET_KEY")  
-    JWT_PEPPER = os.getenv("JWT_PEPPER")
 
+# -------------------------
+# Application Configuration
+# -------------------------
+class Config:
+    """
+    Base configuration class for the Flask application.
+    Loads environment variables and sets default values.
+    """
+
+    # -------------------------
+    # Security / JWT
+    # -------------------------
+    SECRET_KEY = os.getenv("SECRET_KEY")
+    JWT_SECRET_KEY = os.getenv("SECRET_KEY")
+    JWT_PEPPER = os.getenv("JWT_PEPPER")
+    ACCESS_TOKEN_MINUTES = 30
+
+    # JWT cookie settings
+    JWT_TOKEN_LOCATION = ["cookies"]
+    JWT_COOKIE_CSRF_PROTECT = True
+    JWT_ACCESS_COOKIE_PATH = "/"
+    JWT_REFRESH_COOKIE_PATH = "/token/refresh"
+    JWT_COOKIE_SECURE = False  # set True in production
+    JWT_COOKIE_SAMESITE = "Lax"
+
+    # -------------------------
+    # Database Settings
+    # -------------------------
     MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
     MYSQL_PORT = os.getenv("MYSQL_PORT", "3306")
     MYSQL_USER = os.getenv("MYSQL_USER")
@@ -19,19 +44,9 @@ class Config:
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    ACCESS_TOKEN_MINUTES = 30
-
-    # JWT cookie settings
-    JWT_TOKEN_LOCATION = ["cookies"]
-    JWT_COOKIE_CSRF_PROTECT = True
-    JWT_ACCESS_COOKIE_PATH = "/"
-    JWT_REFRESH_COOKIE_PATH = "/token/refresh"
-    JWT_COOKIE_SECURE = False  # set True in production
-    JWT_COOKIE_SAMESITE = "Lax"
-
-    # ----------------------------
-    # Email / SMTP settings
-    # ----------------------------
+    # -------------------------
+    # Email / SMTP Settings
+    # -------------------------
     MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com")
     MAIL_PORT = int(os.getenv("MAIL_PORT", 587))
     MAIL_USE_TLS = os.getenv("MAIL_USE_TLS", "True") == "True"
@@ -40,9 +55,12 @@ class Config:
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")  # your app password
     MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER", MAIL_USERNAME)
 
-    # ----------------------------
-    # Password reset token settings
-    # ----------------------------
-    PASSWORD_RESET_TOKEN_EXP = int(os.getenv("PASSWORD_RESET_TOKEN_EXP", 3600)) 
+    # -------------------------
+    # Password Reset Token Settings
+    # -------------------------
+    PASSWORD_RESET_TOKEN_EXP = int(os.getenv("PASSWORD_RESET_TOKEN_EXP", 3600))
 
+    # -------------------------
+    # Application URL
+    # -------------------------
     APP_URL = os.getenv("APP_URL", "http://127.0.0.1:5000")

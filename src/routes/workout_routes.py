@@ -1,5 +1,5 @@
-# workout_routes.py
-from flask import Blueprint, request, jsonify, abort, render_template
+# src/routes/workout_routes.py
+from flask import Blueprint, request, jsonify, render_template
 from database import db
 from models.workout import Workout
 from models.user import User
@@ -11,18 +11,24 @@ import requests
 import os
 import json
 
+
 workout_bp = Blueprint("workout", __name__, url_prefix="/workouts")
 workout_schema = WorkoutSchema()
 workouts_schema = WorkoutSchema(many=True)
 
-# ==========================================
-# EXISTING API ROUTES
-# ==========================================
+
+# -------------------------
+# CRUD ROUTES
+# -------------------------
 
 @workout_bp.post("/")
 @jwt_required()
 @csrf_protect
 def create_workout():
+    """
+    Create a new workout for the logged-in user.
+    Automatically calculates duration and estimates calories if missing.
+    """
     try:
         user_id = int(get_jwt_identity())
     except (TypeError, ValueError):
@@ -40,21 +46,19 @@ def create_workout():
 
     start_time = validated.get("start_time", datetime.utcnow())
     end_time = validated.get("end_time")
-    
-    # 1. Calculate Duration
+
+    # Calculate duration if not provided
     duration_calc = validated.get("duration_minutes")
     if duration_calc is None:
         if start_time and end_time:
             duration_calc = (end_time - start_time).total_seconds() / 60
         else:
-            # Default to 30 mins if no duration provided
-            duration_calc = 30.0
+            duration_calc = 30.0  # Default to 30 mins
 
-    # 2. Estimate Calories if missing (The Fix)
+    # Estimate calories if missing
     calories = validated.get("calories_burned")
     if calories is None:
-        # Estimate: ~6 calories per minute for moderate exercise
-        calories = int(duration_calc * 6)
+        calories = int(duration_calc * 6)  # Approx 6 calories per minute
 
     workout = Workout(
         user_id=user.id,
@@ -66,7 +70,7 @@ def create_workout():
         reps=validated.get("reps"),
         weight_lbs=validated.get("weight_lbs"),
         machine=validated.get("machine"),
-        calories_burned=calories, # Use our calculated/estimated value
+        calories_burned=calories,
         notes=validated.get("notes")
     )
 
@@ -78,6 +82,9 @@ def create_workout():
 @workout_bp.get("/")
 @jwt_required()
 def get_workouts():
+    """
+    Retrieve all workouts for the logged-in user.
+    """
     try:
         user_id = int(get_jwt_identity())
     except (TypeError, ValueError):
@@ -93,6 +100,9 @@ def get_workouts():
 @workout_bp.get("/<int:id>")
 @jwt_required()
 def get_workout(id):
+    """
+    Retrieve a single workout by ID for the logged-in user.
+    """
     try:
         user_id = int(get_jwt_identity())
     except (TypeError, ValueError):
@@ -109,6 +119,9 @@ def get_workout(id):
 @jwt_required()
 @csrf_protect
 def update_workout(id):
+    """
+    Update an existing workout by ID for the logged-in user.
+    """
     try:
         user_id = int(get_jwt_identity())
     except (TypeError, ValueError):
@@ -139,6 +152,9 @@ def update_workout(id):
 @jwt_required()
 @csrf_protect
 def delete_workout(id):
+    """
+    Delete a workout by ID for the logged-in user.
+    """
     try:
         user_id = int(get_jwt_identity())
     except (TypeError, ValueError):
@@ -153,13 +169,16 @@ def delete_workout(id):
     return jsonify({"message": "Workout deleted"}), 200
 
 
-# ==========================================
-# NEW UI & PROXY ROUTES
-# ==========================================
+# -------------------------
+# UI ROUTES
+# -------------------------
 
-# 1. Render the Workouts List Page
 @workout_bp.route("/ui", methods=["GET"])
 def workouts_page():
+    """
+    Render the workouts list page for the logged-in user.
+    Requires JWT cookie; otherwise redirects to login page.
+    """
     try:
         verify_jwt_in_request(locations=['cookies'])
         user_id = int(get_jwt_identity())
@@ -169,9 +188,13 @@ def workouts_page():
     except Exception:
         return render_template("login.html", error="Please login first")
 
-# 2. Render the Create Workout Page
+
 @workout_bp.route("/ui/create", methods=["GET"])
 def create_workout_page():
+    """
+    Render the create workout page for the logged-in user.
+    Requires JWT cookie; otherwise redirects to login page.
+    """
     try:
         verify_jwt_in_request(locations=['cookies'])
         user_id = int(get_jwt_identity())
@@ -180,15 +203,21 @@ def create_workout_page():
     except Exception:
         return render_template("login.html", error="Please login first")
 
-# 3. Proxy for API Ninjas (WITH LOCAL FALLBACK)
+
+# -------------------------
+# API PROXIES
+# -------------------------
+
 @workout_bp.route("/api/search-exercises", methods=["GET"])
 @jwt_required()
 def proxy_search_exercises():
+    """
+    Proxy to search exercises from API Ninjas, with local fallback.
+    """
     query = request.args.get("query", "").strip()
     muscle = request.args.get("muscle", "").strip()
-    
     api_key = "ZkS5iFS/NKI7TC8m+KaqFA==cpScXc3ACH7s9TCj"
-    
+
     local_fallback_exercises = [
         {"name": "Barbell Bench Press", "muscle": "chest", "difficulty": "intermediate"},
         {"name": "Dumbbell Flys", "muscle": "chest", "difficulty": "beginner"},
@@ -217,10 +246,9 @@ def proxy_search_exercises():
     if muscle:
         params["muscle"] = muscle
 
-    if params: 
+    if params:
         try:
             response = requests.get(api_url, headers={'X-Api-Key': api_key}, params=params)
-            
             if response.status_code == 200:
                 return jsonify(response.json())
             else:
@@ -228,105 +256,94 @@ def proxy_search_exercises():
         except Exception as e:
             print(f"External API Exception (Using Fallback): {str(e)}")
 
-    filtered_results = []
-    for ex in local_fallback_exercises:
-        if muscle and muscle.lower() != ex["muscle"]:
-            continue
-        if query and query.lower() not in ex["name"].lower():
-            continue
-        filtered_results.append(ex)
-    
+    filtered_results = [
+        ex for ex in local_fallback_exercises
+        if (not muscle or muscle.lower() == ex["muscle"]) and (not query or query.lower() in ex["name"].lower())
+    ]
     return jsonify(filtered_results)
 
-# 4. Proxy for Ollama AI (UPDATED FOR DOCKER)
+
 @workout_bp.route("/api/generate-workout", methods=["POST"])
 @jwt_required()
 @csrf_protect
 def proxy_generate_workout():
+    """
+    Proxy to generate AI workout via Ollama, with fallback to mock exercises.
+    """
     data = request.get_json()
     user_prompt = data.get("prompt", "")
-    
+
     system_prompt = (
         "You are a fitness trainer. Create a workout based on the user request. "
         "Return ONLY a JSON array of objects. Each object must have: "
         "'exercise_name', 'sets' (int), 'reps' (int), 'notes' (string). "
         "Do not include any markdown formatting or text outside the JSON."
     )
-    
+
     payload = {
-        "model": "goosedev/luna", 
+        "model": "goosedev/luna",
         "prompt": f"{system_prompt}\nUser Request: {user_prompt}",
         "stream": False
     }
 
     try:
         print(f"Connecting to Ollama with model: {payload['model']}...")
-        
-        # --- CHANGED: Use environment variable from docker-compose ---
-        # If running in Docker, this will be http://host.docker.internal:11434
-        # If running locally without Docker, it falls back to localhost
         base_url = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
         ollama_url = f"{base_url}/api/generate"
-        
-        response = requests.post(ollama_url, json=payload, timeout=60) 
-        
+
+        response = requests.post(ollama_url, json=payload, timeout=60)
         if response.status_code == 200:
             result = response.json()
             return jsonify({"response": result.get("response", "")})
         else:
             print(f"Ollama Error: {response.status_code} - {response.text}")
             raise Exception(f"Ollama Status {response.status_code}")
-            
+
     except Exception as e:
         print(f"AI Generation Failed: {str(e)}")
         print("Falling back to simulated AI response for demo purposes.")
-        
-        # --- SIMULATED AI RESPONSE (Fallback) ---
+
         mock_exercises = [
             {"exercise_name": "Pushups (AI Generated)", "sets": 3, "reps": 15, "notes": "Generated by Fallback Logic"},
             {"exercise_name": "Squats (AI Generated)", "sets": 4, "reps": 12, "notes": "Focus on depth"},
             {"exercise_name": "Plank (AI Generated)", "sets": 3, "reps": 60, "notes": "Keep core tight"},
             {"exercise_name": "Lunges (AI Generated)", "sets": 3, "reps": 10, "notes": "Per leg"}
         ]
-        
+
         if "leg" in user_prompt.lower():
             selection = [mock_exercises[1], mock_exercises[3]]
         elif "chest" in user_prompt.lower() or "push" in user_prompt.lower():
             selection = [mock_exercises[0], mock_exercises[2]]
         else:
             selection = mock_exercises[:3]
-            
-        mock_response_str = json.dumps(selection)
-        return jsonify({"response": mock_response_str})
 
-# 5. Batch Create Workouts with Estimation Logic
+        return jsonify({"response": json.dumps(selection)})
+
+
 @workout_bp.route("/batch", methods=["POST"])
 @jwt_required()
 @csrf_protect
 def create_batch_workouts():
+    """
+    Batch create workouts with automatic duration and calorie estimation.
+    """
     try:
         user_id = int(get_jwt_identity())
         user = User.query.get(user_id)
-        data = request.get_json() 
-        
+        data = request.get_json()
+
         created_items = []
-        
+
         for item in data:
-            # --- UPDATED ESTIMATION LOGIC ---
-            
-            # 1. Extract Duration (Default to 15 mins if missing/empty)
+            # Extract duration
             try:
                 duration = float(item.get("duration_minutes"))
             except (TypeError, ValueError):
-                duration = 15.0 # Fallback default
-            
-            # 2. Calculate Calories: Duration * 6 (Approx value for moderate lifting)
-            # If the user somehow sent specific calories, use that. Otherwise calculate.
-            if item.get("calories_burned"):
-                est_cals = float(item.get("calories_burned"))
-            else:
-                est_cals = duration * 6.0
-            
+                duration = 15.0
+
+            # Calculate calories
+            est_cals = float(item.get("calories_burned")) if item.get("calories_burned") else duration * 6.0
+
             workout = Workout(
                 user_id=user.id,
                 exercise_name=item.get("exercise_name"),
@@ -334,17 +351,15 @@ def create_batch_workouts():
                 reps=int(item.get("reps", 0)) if item.get("reps") else None,
                 weight_lbs=float(item.get("weight_lbs", 0)) if item.get("weight_lbs") else None,
                 notes=item.get("notes", ""),
-                
-                # Save the new fields
                 duration_minutes=duration,
-                calories_burned=est_cals 
+                calories_burned=est_cals
             )
             db.session.add(workout)
             created_items.append(workout)
-            
+
         db.session.commit()
         return jsonify({"message": "Workouts saved successfully", "count": len(created_items)}), 201
-        
+
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 400

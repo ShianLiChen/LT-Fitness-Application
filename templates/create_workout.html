@@ -5,7 +5,9 @@
     <div class="col-lg-10">
         <h2 class="mb-4 text-center">Create Workout Session</h2>
 
-        <!-- Tabs -->
+        <!-- -------------------------
+             Tabs for Search & AI
+        ------------------------- -->
         <ul class="nav nav-tabs mb-4" id="workoutTab" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual-pane" type="button" role="tab">
@@ -21,7 +23,9 @@
 
         <div class="tab-content" id="workoutTabContent">
             
-            <!-- TAB 1: Manual API Search -->
+            <!-- -------------------------
+                 TAB 1: Manual API Search
+            ------------------------- -->
             <div class="tab-pane fade show active" id="manual-pane" role="tabpanel">
                 <div class="card mb-4">
                     <div class="card-body">
@@ -44,7 +48,9 @@
                 </div>
             </div>
 
-            <!-- TAB 2: AI Generation -->
+            <!-- -------------------------
+                 TAB 2: AI Generation
+            ------------------------- -->
             <div class="tab-pane fade" id="ai-pane" role="tabpanel">
                 <div class="card mb-4 bg-light border-info">
                     <div class="card-body">
@@ -58,7 +64,9 @@
 
         </div>
 
-        <!-- Staging Area (Where selected exercises go) -->
+        <!-- -------------------------
+             Staging Area (Where selected exercises go)
+        ------------------------- -->
         <div class="card shadow border-primary">
             <div class="card-header bg-primary text-white">
                 Current Session Plan
@@ -72,7 +80,7 @@
                                 <th width="10%">Sets</th>
                                 <th width="10%">Reps</th>
                                 <th width="10%">Lbs</th>
-                                <th width="12%">Mins</th> <!-- NEW COLUMN -->
+                                <th width="12%">Mins</th>
                                 <th width="12%">Calories</th>
                                 <th>Notes</th>
                                 <th>Action</th>
@@ -97,7 +105,11 @@
 </div>
 
 <script>
-// 1. API Ninjas Search Logic
+/**
+ * @description Performs exercise search using the API Ninjas endpoint.
+ * Updates the #searchResults div with found exercises.
+ * Each result can be added to the staging area.
+ */
 async function searchExercises() {
     const query = document.getElementById('apiSearchInput').value;
     const muscle = document.getElementById('muscleSelect').value;
@@ -106,11 +118,8 @@ async function searchExercises() {
     resultsDiv.innerHTML = '<div class="text-center p-2">Searching...</div>';
 
     try {
-        // REMOVED THE HEADERS OBJECT HERE
         const res = await fetch(`/workouts/api/search-exercises?query=${query}&muscle=${muscle}`);
-        
-        if (!res.ok) throw new Error("Request failed"); // Good practice to check this
-
+        if (!res.ok) throw new Error("Request failed");
         const data = await res.json();
 
         resultsDiv.innerHTML = '';
@@ -123,7 +132,6 @@ async function searchExercises() {
             const item = document.createElement('button');
             item.type = 'button';
             item.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
-            // Added 'difficulty' to the arguments below
             item.onclick = () => addToStaging(ex.name, '', '', '', `Difficulty: ${ex.difficulty}`);
             item.innerHTML = `<span><strong>${ex.name}</strong> <small class="text-muted">(${ex.muscle})</small></span> <span class="badge bg-primary">+ Add</span>`;
             resultsDiv.appendChild(item);
@@ -135,13 +143,15 @@ async function searchExercises() {
     }
 }
 
-// 2. AI Logic
+/**
+ * @description Generates a workout plan using AI (Ollama) based on user prompt.
+ * Populates the staging area with returned exercises.
+ */
 async function generateAIWorkout() {
     const prompt = document.getElementById('aiPrompt').value;
     const loading = document.getElementById('aiLoading');
     
     if(!prompt) return alert("Please enter a prompt");
-    
     loading.classList.remove('d-none');
     
     try {
@@ -154,10 +164,8 @@ async function generateAIWorkout() {
             body: JSON.stringify({ prompt: prompt })
         });
         const data = await res.json();
-        
-        // Parse the JSON response from AI
+
         try {
-            // The proxy returns a string, we assume it's valid JSON array per system prompt
             const exercises = JSON.parse(data.response);
             exercises.forEach(ex => {
                 addToStaging(ex.exercise_name, ex.sets, ex.reps, '', ex.notes);
@@ -174,12 +182,17 @@ async function generateAIWorkout() {
     }
 }
 
-// 3. Staging Area Logic
+/**
+ * @description Adds a single exercise row to the staging table.
+ * @param {string} name - Name of the exercise.
+ * @param {string|number} sets - Number of sets.
+ * @param {string|number} reps - Number of reps.
+ * @param {string|number} weight - Weight in lbs.
+ * @param {string} notes - Optional notes about the exercise.
+ */
 function addToStaging(name, sets, reps, weight, notes) {
     document.getElementById('emptyMsg').style.display = 'none';
     const tbody = document.querySelector('#stagingTable tbody');
-    
-    // Default duration is 15 mins
     const defaultDuration = 15;
     const defaultCalories = '';
 
@@ -197,7 +210,10 @@ function addToStaging(name, sets, reps, weight, notes) {
     tbody.appendChild(tr);
 }
 
-// 4. Save Batch Logic
+/**
+ * @description Saves all exercises in the staging table as a batch POST request.
+ * Redirects to the workouts UI on success.
+ */
 async function saveAllWorkouts() {
     const rows = document.querySelectorAll('#stagingTable tbody tr');
     if(rows.length === 0) return alert("No exercises to save!");
@@ -224,7 +240,7 @@ async function saveAllWorkouts() {
 
         if(res.ok) {
             alert("Workout session saved!");
-            window.location.href = '/workouts/ui'; // Redirect to list
+            window.location.href = '/workouts/ui';
         } else {
             alert("Error saving workouts");
         }
@@ -233,6 +249,11 @@ async function saveAllWorkouts() {
     }
 }
 
+/**
+ * @description Retrieves a cookie value by name.
+ * @param {string} name - Name of the cookie.
+ * @returns {string|null} Cookie value or null if not found.
+ */
 function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
@@ -240,4 +261,5 @@ function getCookie(name) {
     return null;
 }
 </script>
+
 {% endblock %}

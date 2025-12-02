@@ -1,9 +1,22 @@
+# src/models/workout.py
 from database import db
 from datetime import datetime
 
+
+# -------------------------
+# Workout Model
+# -------------------------
 class Workout(db.Model):
+    """
+    Database model for tracking user workouts.
+    Stores exercise details, duration, sets, reps, weight, calories, and timestamps.
+    """
+
     __tablename__ = "workouts"
 
+    # -------------------------
+    # Columns
+    # -------------------------
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     exercise_name = db.Column(db.String(100), nullable=False)
@@ -18,10 +31,18 @@ class Workout(db.Model):
     notes = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # relationship to user
+    # -------------------------
+    # Relationships
+    # -------------------------
     user = db.relationship("User", back_populates="workouts")
 
+    # -------------------------
+    # Utility Methods
+    # -------------------------
     def to_dict(self):
+        """
+        Serialize Workout object to a dictionary.
+        """
         return {
             "id": self.id,
             "user_id": self.user_id,
@@ -35,5 +56,5 @@ class Workout(db.Model):
             "machine": self.machine,
             "calories_burned": self.calories_burned,
             "notes": self.notes,
-            "created_at": self.created_at.isoformat()
+            "created_at": self.created_at.isoformat(),
         }

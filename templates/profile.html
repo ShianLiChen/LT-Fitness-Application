@@ -5,7 +5,9 @@
     <div class="col-md-6">
         <h2 class="mb-4">User Profile</h2>
 
-        <!-- Profile info -->
+        <!-- -------------------------
+             Profile Card
+        ------------------------- -->
         <div id="profileCard" class="card mb-4">
             <div class="card-body">
                 <p><strong>Username:</strong> <span id="username">Loading...</span></p>
@@ -14,7 +16,9 @@
             </div>
         </div>
 
-        <!-- Change Password -->
+        <!-- -------------------------
+             Change Password Form
+        ------------------------- -->
         <div class="card mb-3">
             <div class="card-body">
                 <h4>Change Password</h4>
@@ -39,35 +43,55 @@
             </div>
         </div>
 
+        <!-- -------------------------
+             Back to Dashboard Button
+        ------------------------- -->
         <a href="/dashboard" class="btn btn-primary">Back to Dashboard</a>
     </div>
 </div>
 
 <script>
-// Load profile info
+/**
+ * @description Fetches user profile info from the server
+ * Populates the profile card with username, email, and account creation date.
+ */
 async function loadProfile() {
     try {
         const res = await fetch('/auth/me', { credentials: 'include' });
         if (!res.ok) throw new Error('Failed to fetch user info');
+
         const data = await res.json();
         const user = data.user;
 
+        // Update DOM elements with user info
         document.getElementById('username').innerText = user.username;
         document.getElementById('email').innerText = user.email;
+
         if (user.created_at) {
-            const utcDate = new Date(user.created_at + 'Z'); // append Z to mark it as UTC
-            document.getElementById('createdAt').innerText = utcDate.toLocaleString(); // local time
+            // Convert UTC to local time
+            const utcDate = new Date(user.created_at + 'Z'); 
+            document.getElementById('createdAt').innerText = utcDate.toLocaleString();
         } else {
             document.getElementById('createdAt').innerText = 'N/A';
         }
     } catch (err) {
-        document.getElementById('profileCard').innerHTML = `<div class="alert alert-danger">Error loading profile: ${err.message}</div>`;
+        // Display error message inside profile card
+        document.getElementById('profileCard').innerHTML = `
+            <div class="alert alert-danger">Error loading profile: ${err.message}</div>
+        `;
     }
 }
 
+// Load profile when page loads
 loadProfile();
 
-// Handle password change
+/**
+ * @description Handles the change password form submission
+ * - Validates new passwords match
+ * - Ensures CSRF token is present
+ * - Sends POST request to change password endpoint
+ * - Displays success/error messages
+ */
 document.getElementById('changePasswordForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
@@ -76,12 +100,14 @@ document.getElementById('changePasswordForm').addEventListener('submit', async f
     const confirmNewPassword = document.getElementById('confirmNewPassword').value;
     const messageDiv = document.getElementById('changePasswordMessage');
 
+    // Validate that new passwords match
     if (newPassword !== confirmNewPassword) {
         messageDiv.className = 'alert alert-danger';
         messageDiv.innerText = "New passwords do not match.";
         return;
     }
 
+    // Ensure CSRF token exists
     if (!window.csrfToken) {
         messageDiv.className = 'alert alert-danger';
         messageDiv.innerText = "CSRF token missing. Make sure you are logged in.";
@@ -89,6 +115,7 @@ document.getElementById('changePasswordForm').addEventListener('submit', async f
     }
 
     try {
+        // Send password change request
         const response = await fetch('/auth/change-password', {
             method: 'POST',
             headers: {
@@ -104,6 +131,7 @@ document.getElementById('changePasswordForm').addEventListener('submit', async f
 
         const data = await response.json();
 
+        // Show success or error message
         if (response.status === 200) {
             messageDiv.className = 'alert alert-success';
             messageDiv.innerText = data.message || 'Password changed successfully!';
@@ -116,10 +144,14 @@ document.getElementById('changePasswordForm').addEventListener('submit', async f
         messageDiv.innerText = 'Error: ' + err.message;
     }
 });
+
+/**
+ * @description Clears password form inputs if page is loaded from back/forward cache
+ */
 window.addEventListener('pageshow', (event) => {
-    if (event.persisted) {  // triggered when page is loaded from bfcache (back/forward)
+    if (event.persisted) {
         const form = document.getElementById('changePasswordForm');
-        if (form) form.reset();  // clears all inputs
+        if (form) form.reset();
     }
 });
 </script>

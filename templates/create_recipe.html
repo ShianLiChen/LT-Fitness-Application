@@ -7,7 +7,9 @@
     <div class="col-lg-10">
         <h2 class="mb-4 text-center">Find or Create Recipes</h2>
 
-        <!-- Tabs -->
+        <!-- -------------------------
+             Tabs for Search & AI
+        ------------------------- -->
         <ul class="nav nav-pills nav-fill mb-4" id="recipeTab" role="tablist">
             <li class="nav-item">
                 <button class="nav-link active" id="search-tab" data-bs-toggle="tab" data-bs-target="#search-pane" type="button">
@@ -22,8 +24,10 @@
         </ul>
 
         <div class="tab-content">
-            
-            <!-- TAB 1: Search -->
+
+            <!-- -------------------------
+                 TAB 1: External Meal Search
+            ------------------------- -->
             <div class="tab-pane fade show active" id="search-pane">
                 <div class="input-group mb-4">
                     <input type="text" id="mealInput" class="form-control" placeholder="Search e.g. Chicken, Pasta, Pie...">
@@ -32,7 +36,9 @@
                 <div id="mealResults" class="row g-3"></div>
             </div>
 
-            <!-- TAB 2: AI -->
+            <!-- -------------------------
+                 TAB 2: AI Recipe Generation
+            ------------------------- -->
             <div class="tab-pane fade" id="ai-pane">
                 <div class="card border-warning">
                     <div class="card-header bg-warning text-dark">
@@ -46,8 +52,10 @@
                         </button>
                     </div>
                 </div>
-                
-                <!-- AI Result Preview -->
+
+                <!-- -------------------------
+                     AI Recipe Preview
+                ------------------------- -->
                 <div id="aiPreview" class="card mt-3 d-none">
                     <div class="card-body">
                         <h4 id="aiTitle"></h4>
@@ -80,7 +88,11 @@
 <script>
 let currentAiRecipe = null;
 
-// --- SEARCH LOGIC ---
+/**
+ * @function searchMeals
+ * @description Searches TheMealDB for recipes based on user input and updates the search results container.
+ * Displays a loading spinner during fetch and handles errors gracefully.
+ */
 async function searchMeals() {
     const query = document.getElementById('mealInput').value;
     const container = document.getElementById('mealResults');
@@ -89,9 +101,9 @@ async function searchMeals() {
     try {
         const res = await fetch(`/recipes/api/search-external?query=${query}`);
         const data = await res.json();
-        
+
         container.innerHTML = '';
-        if(data.length === 0) {
+        if (data.length === 0) {
             container.innerHTML = '<p class="text-center text-muted w-100">No meals found.</p>';
             return;
         }
@@ -111,14 +123,21 @@ async function searchMeals() {
             `;
             container.appendChild(col);
         });
-    } catch(err) {
+    } catch (err) {
         container.innerHTML = '<p class="text-danger text-center w-100">Error searching meals.</p>';
+        console.error("searchMeals failed:", err);
     }
 }
 
+/**
+ * @function saveApiRecipe
+ * @description Saves a recipe fetched from external API to the user's cookbook.
+ * Prompts for confirmation before sending a POST request.
+ * @param {Object} meal - Recipe object fetched from TheMealDB API
+ */
 async function saveApiRecipe(meal) {
-    if(!confirm(`Save "${meal.title}" to your cookbook?`)) return;
-    // API meals don't have macros usually, we save as null
+    if (!confirm(`Save "${meal.title}" to your cookbook?`)) return;
+
     const payload = {
         title: meal.title,
         ingredients: meal.ingredients,
@@ -126,15 +145,19 @@ async function saveApiRecipe(meal) {
         image_url: meal.image_url,
         calories: null, protein: null, carbs: null, fats: null
     };
-    
+
     await submitRecipe(payload);
 }
 
-// --- AI LOGIC ---
+/**
+ * @function generateAiRecipe
+ * @description Sends a prompt to the AI Chef backend and renders the recipe preview.
+ * Handles parsing errors and updates UI accordingly.
+ */
 async function generateAiRecipe() {
     const prompt = document.getElementById('aiPrompt').value;
     const btn = document.getElementById('genBtn');
-    if(!prompt) return alert("Please describe a recipe.");
+    if (!prompt) return alert("Please describe a recipe.");
 
     btn.disabled = true;
     btn.innerHTML = 'Cooking... <span class="spinner-border spinner-border-sm"></span>';
@@ -146,11 +169,11 @@ async function generateAiRecipe() {
             body: JSON.stringify({prompt: prompt})
         });
         const data = await res.json();
-        
+
         try {
             const recipe = JSON.parse(data.response);
             currentAiRecipe = recipe;
-            
+
             // Fill Preview
             document.getElementById('aiTitle').innerText = recipe.title;
             document.getElementById('aiIngredients').innerText = recipe.ingredients;
@@ -159,24 +182,30 @@ async function generateAiRecipe() {
             document.getElementById('aiProt').innerText = recipe.protein || '?';
             document.getElementById('aiCarb').innerText = recipe.carbs || '?';
             document.getElementById('aiFat').innerText = recipe.fats || '?';
-            
+
             document.getElementById('aiPreview').classList.remove('d-none');
-        } catch(e) {
+        } catch (e) {
             alert("AI output format error. Check console.");
-            console.log(data.response);
+            console.error("AI parse error:", data.response);
         }
 
-    } catch(err) {
+    } catch (err) {
         alert("Failed to generate recipe.");
+        console.error("generateAiRecipe failed:", err);
     } finally {
         btn.disabled = false;
         btn.innerText = 'Generate Recipe';
     }
 }
 
+/**
+ * @function saveAiRecipe
+ * @description Saves the current AI-generated recipe to the user's cookbook.
+ * Does nothing if no AI recipe is currently generated.
+ */
 async function saveAiRecipe() {
-    if(!currentAiRecipe) return;
-    
+    if (!currentAiRecipe) return;
+
     const payload = {
         title: currentAiRecipe.title,
         ingredients: currentAiRecipe.ingredients,
@@ -187,11 +216,17 @@ async function saveAiRecipe() {
         carbs: currentAiRecipe.carbs,
         fats: currentAiRecipe.fats
     };
-    
+
     await submitRecipe(payload);
 }
 
-// --- SHARED SAVE FUNCTION ---
+/**
+ * @function submitRecipe
+ * @description Submits a recipe payload to the server and handles success or error feedback.
+ * Updates the UI by redirecting to the cookbook page upon successful save.
+ * @param {Object} payload - Recipe object containing title, ingredients, instructions, image_url, and nutrition.
+ * @returns {Promise<void>} - No return value; updates DOM or shows alerts on completion.
+ */
 async function submitRecipe(payload) {
     try {
         const res = await fetch('/recipes/', {
@@ -199,16 +234,16 @@ async function submitRecipe(payload) {
             headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.csrfToken},
             body: JSON.stringify(payload)
         });
-        
-        if(res.ok) {
+
+        if (res.ok) {
             alert("Recipe Saved!");
             window.location.href = '/recipes/ui';
         } else {
             const err = await res.json();
             alert("Error saving: " + (err.error || "Unknown"));
         }
-    } catch(e) {
-        console.error(e);
+    } catch (e) {
+        console.error("submitRecipe failed:", e);
     }
 }
 </script>

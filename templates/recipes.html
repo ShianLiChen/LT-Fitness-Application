@@ -4,6 +4,10 @@
 
 {% block content %}
 <div class="container py-4">
+
+    <!-- -------------------------
+         Header / Create Recipe Button
+    ------------------------- -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2><i class="fas fa-utensils me-2"></i>My Cookbook</h2>
         <a href="{{ url_for('recipe.create_recipe_page') }}" class="btn btn-success">
@@ -12,10 +16,15 @@
     </div>
 
     {% if recipes %}
+        <!-- -------------------------
+             Recipe Cards Grid
+        ------------------------- -->
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
             {% for recipe in recipes %}
             <div class="col">
                 <div class="card h-100 shadow-sm">
+
+                    <!-- Recipe Image -->
                     {% if recipe.image_url %}
                         <img src="{{ recipe.image_url }}" class="card-img-top" alt="{{ recipe.title }}" style="height: 200px; object-fit: cover;">
                     {% else %}
@@ -23,10 +32,13 @@
                             <i class="fas fa-carrot fa-3x"></i>
                         </div>
                     {% endif %}
-                    
+
+                    <!-- -------------------------
+                         Recipe Card Body
+                    ------------------------- -->
                     <div class="card-body">
                         <h5 class="card-title">{{ recipe.title }}</h5>
-                        
+
                         <!-- Nutrition Badges -->
                         <div class="mb-2">
                             {% if recipe.calories %}
@@ -42,7 +54,10 @@
 
                         <p class="card-text text-truncate small text-muted">{{ recipe.ingredients }}</p>
                     </div>
-                    
+
+                    <!-- -------------------------
+                         Recipe Card Footer
+                    ------------------------- -->
                     <div class="card-footer bg-white border-top-0 d-flex justify-content-between">
                         <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#recipeModal{{ recipe.id }}">
                             View Recipe
@@ -54,7 +69,9 @@
                 </div>
             </div>
 
-            <!-- Modal for details -->
+            <!-- -------------------------
+                 Recipe Modal for Details
+            ------------------------- -->
             <div class="modal fade" id="recipeModal{{ recipe.id }}" tabindex="-1">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
@@ -68,7 +85,7 @@
                             <hr>
                             <h6>Instructions:</h6>
                             <p style="white-space: pre-wrap;">{{ recipe.instructions }}</p>
-                            
+
                             {% if recipe.calories %}
                             <div class="alert alert-info mt-3">
                                 <strong>Nutrition Estimates:</strong><br>
@@ -76,7 +93,10 @@
                             </div>
                             {% endif %}
                         </div>
-                        <!-- NEW FOOTER ADDED HERE -->
+
+                        <!-- -------------------------
+                             Modal Footer Disclaimer
+                        ------------------------- -->
                         <div class="modal-footer bg-light">
                             <small class="text-muted fst-italic w-100 text-center">
                                 * Disclaimer: All calorie and macronutrient values are general estimates and may not be 100% accurate.
@@ -85,9 +105,13 @@
                     </div>
                 </div>
             </div>
+
             {% endfor %}
         </div>
     {% else %}
+        <!-- -------------------------
+             No Recipes Placeholder
+        ------------------------- -->
         <div class="text-center py-5 bg-light rounded-3">
             <i class="fas fa-hamburger fa-3x text-muted mb-3"></i>
             <h3>No recipes saved yet</h3>
@@ -98,15 +122,31 @@
 </div>
 
 <script>
+/**
+ * @description Deletes a recipe by ID.
+ * Prompts user for confirmation, sends DELETE request to server,
+ * and reloads page on success.
+ * @param {string} id - The ID of the recipe to delete
+ */
 async function deleteRecipe(id) {
-    if(!confirm("Delete this recipe?")) return;
+    if (!confirm("Delete this recipe?")) return;
+
     try {
         const res = await fetch(`/recipes/${id}`, {
             method: 'DELETE',
             headers: { 'X-CSRF-TOKEN': window.csrfToken }
         });
-        if(res.ok) window.location.reload();
-    } catch(err) { console.error(err); }
+
+        if (res.ok) {
+            // Reload page to reflect changes
+            window.location.reload();
+        } else {
+            console.error("Failed to delete recipe");
+        }
+    } catch (err) {
+        console.error(err);
+    }
 }
 </script>
+
 {% endblock %}

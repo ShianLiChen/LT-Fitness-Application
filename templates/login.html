@@ -1,39 +1,67 @@
 {% extends "base.html" %}
+
 {% block content %}
+
+<!-- -------------------------
+     Login Form Section
+------------------------- -->
 <div class="row justify-content-center">
     <div class="col-md-5">
+
+        <!-- -------------------------
+             Login Card / Form
+        ------------------------- -->
         <h2 class="mb-4">Login</h2>
         <form id="loginForm">
+            <!-- Username Input -->
             <div class="mb-3">
                 <label for="username" class="form-label">Username</label>
                 <input type="text" class="form-control" id="username" required>
             </div>
+
+            <!-- Password Input -->
             <div class="mb-3">
                 <label for="password" class="form-label">Password</label>
                 <input type="password" class="form-control" id="password" required>
             </div>
+
+            <!-- Submit Button -->
             <button type="submit" class="btn btn-primary">Login</button>
         </form>
+
+        <!-- Additional Links -->
         <p class="mt-2"><a href="/auth/forgot-password">Forgot your password?</a></p>
         <p class="mt-3">Don't have an account? <a href="/register">Register here</a></p>
+
+        <!-- Message Display -->
         <div id="loginMessage" class="mt-2"></div>
     </div>
 </div>
 
+<!-- -------------------------
+     Login Form Script Logic
+------------------------- -->
 <script>
-document.getElementById('loginForm').addEventListener('submit', async function(e){
+/**
+ * @description Handles login form submission via AJAX.
+ * Sends username and password to server and updates message div.
+ */
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
+
     const response = await fetch('/auth/login', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             username: document.getElementById('username').value,
             password: document.getElementById('password').value
         })
     });
+
     const data = await response.json();
     const messageDiv = document.getElementById('loginMessage');
-    if(response.status === 200){
+
+    if (response.status === 200) {
         messageDiv.className = 'alert alert-success';
         messageDiv.innerText = 'Login successful!';
         setTimeout(() => window.location.href = '/dashboard', 1000);
@@ -42,11 +70,17 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         messageDiv.innerText = data.error || 'Login failed';
     }
 });
+
+/**
+ * @description Resets login form when navigating back from browser cache (bfcache).
+ * Ensures sensitive info is not retained.
+ */
 window.addEventListener('pageshow', function(event) {
-    if (event.persisted) { // true if coming from bfcache (back button)
+    if (event.persisted) {
         const loginForm = document.getElementById('loginForm');
         if (loginForm) loginForm.reset();
     }
 });
 </script>
+
 {% endblock %}

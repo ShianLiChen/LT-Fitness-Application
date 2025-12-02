@@ -1,6 +1,15 @@
+# src/schemas/workout_schema.py
 from marshmallow import Schema, fields, validate
 
+
+# -------------------------
+# Workout Schema
+# -------------------------
 class WorkoutSchema(Schema):
+    """
+    Schema for validating and serializing Workout objects.
+    """
+
     id = fields.Int(dump_only=True)
     user_id = fields.Int(dump_only=True)
     exercise_name = fields.Str(required=True, validate=validate.Length(min=1, max=100))

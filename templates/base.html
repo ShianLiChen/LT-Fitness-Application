@@ -4,11 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title or "LT Fitness Tracker" }}</title>
-    <!-- Bootstrap CSS and Font Awesome for Icons -->
+
+    <!-- -------------------------
+         External Stylesheets
+    ------------------------- -->
+    <!-- Bootstrap CSS: responsive grid and components -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome: scalable vector icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom application styles -->
     <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
-    <!-- Favicon and Touch Icons -->
+
+    <!-- -------------------------
+         Favicon & Web Manifest
+    ------------------------- -->
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon/favicon-96x96.png') }}" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon/favicon.svg') }}" />
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon/favicon.ico') }}" />
@@ -17,37 +26,38 @@
     <link rel="manifest" href="{{ url_for('static', filename='favicon/site.webmanifest') }}" />
 </head>
 <body>
+<!-- -------------------------
+     Navigation Bar
+------------------------- -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" 
-            href="{% if current_user %}/dashboard{% else %}/{% endif %}">
+        <!-- Brand Logo -->
+        <a class="navbar-brand" href="{% if current_user %}/dashboard{% else %}/{% endif %}">
             <img src="{{ url_for('static', filename='logo/siteLogo.jpg') }}" 
-                alt="Logo" 
-                width="35" 
-                height="35" 
-                class="d-inline-block align-text-top rounded-circle me-2">
+                 alt="LT Fitness Tracker Logo" 
+                 width="35" height="35" 
+                 class="d-inline-block align-text-top rounded-circle me-2">
             LT Fitness Tracker
         </a>
+
+        <!-- Collapsible Navbar Links -->
         <div class="collapse navbar-collapse">
             <ul class="navbar-nav ms-auto">
                 {% if not current_user %}
+                    <!-- Guest Users -->
                     <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
                     <li class="nav-item"><a class="nav-link" href="/register">Register</a></li>
                 {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="/dashboard">Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/workouts/ui">My Workouts</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/recipes/ui">My Cookbook</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/stats/ui">Statistics</a>
-                    </li>
+                    <!-- Authenticated Users -->
+                    <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/workouts/ui">My Workouts</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/recipes/ui">My Cookbook</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/stats/ui">Statistics</a></li>
+
+                    <!-- Account Dropdown Menu -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" 
+                           data-bs-toggle="dropdown" aria-expanded="false">
                             Account
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
@@ -70,21 +80,38 @@
     </div>
 </nav>
 
+<!-- -------------------------
+     Main Content
+------------------------- -->
 <div class="container mt-5">
     {% block content %}
     {% endblock %}
 </div>
 
+<!-- -------------------------
+     External Scripts
+------------------------- -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
 
+<!-- -------------------------
+     CSRF Token Handling & Logout Logic
+------------------------- -->
 <script>
+/**
+ * @description Global CSRF token storage used for all POST requests requiring authentication.
+ */
 window.csrfToken = null;
 
-// Fetch CSRF token on page load if user is logged in
+/**
+ * @description Fetches CSRF token from server to secure future POST requests.
+ * Essential for authenticated actions such as logout or data modification.
+ * @async
+ * @returns {Promise<void>} Sets the CSRF token to `window.csrfToken`.
+ */
 async function fetchCsrfToken() {
     try {
         const res = await fetch('/auth/csrf-token', { credentials: 'include' });
-        if (!res.ok) throw new Error('Failed to get CSRF token');
+        if (!res.ok) throw new Error('Failed to fetch CSRF token');
         const data = await res.json();
         window.csrfToken = data.csrf_token;
     } catch (err) {
@@ -92,13 +119,19 @@ async function fetchCsrfToken() {
     }
 }
 
-// Call it immediately
+// Fetch CSRF token on page load
 fetchCsrfToken();
 
-// Logout function
+/**
+ * @description Logs out the current user by sending a POST request to the server.
+ * Requires a valid CSRF token and redirects to login page on success.
+ * @async
+ * @returns {Promise<void>}
+ * @throws Will log errors if CSRF token is missing or the request fails.
+ */
 async function logout() {
     if (!window.csrfToken) {
-        console.error("CSRF token missing. Make sure user is logged in.");
+        console.error("CSRF token missing. Logout aborted.");
         return;
     }
 
@@ -110,6 +143,7 @@ async function logout() {
         });
 
         if (res.ok) {
+            // Redirect to login after successful logout
             window.location.href = '/login';
         } else {
             const data = await res.json();
@@ -120,10 +154,15 @@ async function logout() {
     }
 }
 
+// Attach logout event listener
 const logoutBtn = document.getElementById('logoutBtn');
 if (logoutBtn) logoutBtn.addEventListener('click', logout);
 </script>
 
+<!-- -------------------------
+     Application Scripts
+------------------------- -->
 <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+
 </body>
 </html>
