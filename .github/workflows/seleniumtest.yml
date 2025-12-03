@@ -61,4 +61,4 @@ jobs:
           SELENIUMBROWSER: chrome
           BINARY_LOCATION: "/usr/bin/chromium-browser"
         run: |
-          pytest tests/test_selenium_*.py --headless --driver chrome
+          python -m seleniumbase run tests/test_selenium_*.py --headless --browser=chrome
