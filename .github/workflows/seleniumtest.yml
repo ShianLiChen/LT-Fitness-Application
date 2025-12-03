@@ -10,6 +10,7 @@ jobs:
   selenium-test-chrome:
     name: Run Selenium Tests on Chrome
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout code
@@ -20,14 +21,16 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install system deps and Chromium
+      - name: Install system deps and Chromium + runtime libs
         run: |
           sudo apt-get update
           sudo apt-get install -y \
             chromium-browser chromium-chromedriver \
-            libnss3 libxss1 libasound2t64 fonts-liberation \
+            ca-certificates curl \
+            libnss3 libxss1 fonts-liberation \
             libappindicator3-1 libatk-bridge2.0-0 libgtk-3-0 libgbm1 \
-            ca-certificates curl
+            libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 \
+            libxrandr2 libxtst6 libgconf-2-4 libproxy1v5 libasound2t64
           python -m pip install --upgrade pip
 
       - name: Install Python dependencies
@@ -74,7 +77,8 @@ jobs:
         env:
           PYTHONPATH: src
           SELENIUMBROWSER: chrome
-          SBROWSER_ARGS: "--no-sandbox --disable-dev-shm-usage"
+          # Strong CI flags for Chrome
+          SBROWSER_ARGS: "--no-sandbox --disable-dev-shm-usage --disable-gpu --headless=new --remote-debugging-port=9222"
         run: |
           BINARY=$(which chromium-browser || which chromium || echo /usr/bin/chromium-browser)
           echo "Using browser binary: $BINARY"
