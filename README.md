@@ -399,6 +399,21 @@ Provides:
 
 ---
 
+## Testing
+Testing for the application is done through pytest and SeleniumBase and cover unit tests, integration tests and end-to-end tests. Testing is checked through the CI/CD pipeline via the `.github\workflows\ci.yml` file and a coverage report can be seen in the `htmlcov\index.html` file. Testing can also be done locally through the following steps:
+
+1. After cloning the repo to your local drive, open a terminal and navigate to the project folder (where `requirements.txt` is located).
+2. Create and activate a virtual environment:
+```
+python -m venv venv
+venv\Scripts\activate
+```
+3. Install the dependencies using: `pip install -r requirements.txt`
+4. Run the application using: `flask --app src\app run`
+5. Staying in the same path run: `pytest -v --headless`
+- Make sure the virtual environment is activated before running tests
+- You should see 48 tests passed
+
 ## ❓ Troubleshooting
 
 * **"Recipe AI Generator fails or times out on Live Site":**
