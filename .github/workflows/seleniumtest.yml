@@ -11,12 +11,20 @@ jobs:
     name: Run Selenium Tests on Chrome
     runs-on: ubuntu-latest
 
+    # 1. Start MySQL Service
     services:
-      selenium:
-        image: selenium/standalone-chrome:latest
-        options: --shm-size=2gb
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: fitness_app_test
         ports:
-          - 4444:4444
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
 
     steps:
       - name: Checkout code
@@ -44,14 +52,26 @@ jobs:
           echo "MYSQL_DB=fitness_app_test" >> .env
           echo "FLASK_ENV=development" >> .env
           echo "FLASK_PORT=5000" >> .env
-          echo "APP_URL=http://host.docker.internal:5000" >> .env
+          echo "APP_URL=http://127.0.0.1:5000" >> .env
+
+      # 2. Create Tables (Crucial Step)
+      - name: Initialize Database
+        env:
+          PYTHONPATH: src
+        run: |
+          # Verify this import matches your project structure
+          python -c "from app import app, db; app.app_context().push(); db.create_all()"
 
       - name: Start Flask App
+        env:
+          PYTHONPATH: src
         run: |
           export FLASK_APP=src/app.py
           flask run --host=0.0.0.0 --port=5000 &
-          for i in {1..10}; do
-            curl -s http://0.0.0.0:5000/ && break
+          
+          echo "Waiting for Flask..."
+          for i in {1..15}; do
+            curl -s http://127.0.0.1:5000/ > /dev/null && break
             sleep 2
           done
 
@@ -59,6 +79,6 @@ jobs:
         env:
           PYTHONPATH: src
           SELENIUMBROWSER: chrome
-          APP_URL: http://host.docker.internal:5000
+          APP_URL: http://127.0.0.1:5000
         run: |
           pytest tests/test_selenium_*.py --headless --browser=chrome
