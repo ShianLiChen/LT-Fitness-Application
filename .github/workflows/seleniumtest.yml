@@ -10,7 +10,13 @@ jobs:
   selenium-test-chrome:
     name: Run Selenium Tests on Chrome
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+
+    services:
+      selenium:
+        image: selenium/standalone-chrome:latest
+        options: --shm-size=2gb
+        ports:
+          - 4444:4444
 
     steps:
       - name: Checkout code
@@ -21,25 +27,11 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install system deps and Chromium + runtime libs
+      - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y software-properties-common
-          sudo add-apt-repository universe
-          sudo apt-get update
-          sudo apt-get install -y \
-            chromium-browser chromium-chromedriver \
-            ca-certificates curl \
-            libnss3 libxss1 fonts-liberation \
-            libappindicator3-1 libatk-bridge2.0-0 libgtk-3-0 libgbm1 \
-            libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 \
-            libxrandr2 libxtst6 libgconf-2-4 libproxy1v5 libasound2t64 || true
           python -m pip install --upgrade pip
-
-      - name: Install Python dependencies
-        run: |
           pip install -r requirements.txt
-          pip install selenium seleniumbase pytest
+          pip install selenium seleniumbase pytest webdriver-manager
 
       - name: Create Dummy .env
         run: |
@@ -52,12 +44,15 @@ jobs:
           echo "MYSQL_DB=fitness_app_test" >> .env
           echo "FLASK_ENV=development" >> .env
           echo "FLASK_PORT=5000" >> .env
-          echo "APP_URL=http://127.0.0.1:5000" >> .env
+          # Use host.docker.internal so the selenium service container can reach the runner-hosted Flask app
+          echo "APP_URL=http://host.docker.internal:5000" >> .env
 
       - name: Start Flask App
         run: |
           export FLASK_APP=src/app.py
+          # Bind to all interfaces so the service container can reach it via host.docker.internal
           flask run --host=0.0.0.0 --port=5000 &
+          # Wait for the app to be ready
           for i in {1..20}; do
             if curl -sS http://127.0.0.1:5000/ >/dev/null 2>&1; then
               echo "Flask is up"
@@ -67,24 +62,22 @@ jobs:
             sleep 2
           done
 
-      - name: Debug- show browser/driver and register page snippet
+      - name: Debug- show register page snippet (runner view)
         run: |
-          echo "Detecting Chromium binary and chromedriver..."
-          which chromium-browser || which chromium || echo "no chromium binary found"
-          chromium-browser --version || chromium --version || echo "no chromium binary version"
-          chromedriver --version || echo "no chromedriver found"
-          echo "Register page snippet:"
+          echo "Register page snippet (runner view):"
           curl -sS http://127.0.0.1:5000/register | head -c 400 || true
 
-      - name: Run Selenium Tests
+      - name: Run Selenium Tests (remote Selenium service)
         env:
           PYTHONPATH: src
           SELENIUMBROWSER: chrome
-          # Strong CI flags for Chrome
-          SBROWSER_ARGS: "--no-sandbox --disable-dev-shm-usage --disable-gpu --headless=new --remote-debugging-port=9222"
+          # Tell SeleniumBase to use the remote Selenium server (service name 'selenium' is resolvable)
+          SELENIUM_REMOTE_URL: http://selenium:4444/wd/hub
+          # App URL reachable from the selenium container
+          APP_URL: http://host.docker.internal:5000
+          # Recommended CI flags (SeleniumBase will pass these to Chrome)
+          SBROWSER_ARGS: "--no-sandbox --disable-dev-shm-usage --disable-gpu --headless=new"
         run: |
-          BINARY=$(which chromium-browser || which chromium || echo /usr/bin/chromium-browser)
-          echo "Using browser binary: $BINARY"
-          export BINARY_LOCATION="$BINARY"
-          echo "BINARY_LOCATION=$BINARY_LOCATION"
-          pytest tests/test_selenium_*.py --headless --browser=chrome
+          echo "Using remote Selenium server: $SELENIUM_REMOTE_URL"
+          # Run tests against the remote Selenium server; SeleniumBase accepts --server to point to a remote hub
+          pytest tests/test_selenium_*.py --headless --browser=chrome --server=http://selenium:4444/wd/hub
