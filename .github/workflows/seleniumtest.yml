@@ -59,8 +59,7 @@ jobs:
         env:
           PYTHONPATH: src
         run: |
-          # Verify this import matches your project structure
-          python -c "from app import app, db; app.app_context().push(); db.create_all()"
+          python -c "from app import create_app, db; app = create_app(); app.app_context().push(); db.create_all()"
 
       - name: Start Flask App
         env:
