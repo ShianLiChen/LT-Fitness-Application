@@ -44,50 +44,21 @@ jobs:
           echo "MYSQL_DB=fitness_app_test" >> .env
           echo "FLASK_ENV=development" >> .env
           echo "FLASK_PORT=5000" >> .env
-          # Browser in the selenium service will reach the runner via host.docker.internal
           echo "APP_URL=http://host.docker.internal:5000" >> .env
 
       - name: Start Flask App
         run: |
           export FLASK_APP=src/app.py
           flask run --host=0.0.0.0 --port=5000 &
-          for i in {1..20}; do
-            if curl -sS http://127.0.0.1:5000/ >/dev/null 2>&1; then
-              echo "Flask is up"
-              break
-            fi
-            echo "Waiting for Flask... ($i)"
+          for i in {1..10}; do
+            curl -s http://0.0.0.0:5000/ && break
             sleep 2
           done
 
-      - name: Wait for Selenium service to be ready
-        run: |
-          echo "Waiting for Selenium at http://127.0.0.1:4444/wd/hub/status ..."
-          for i in {1..30}; do
-            if curl -sS http://127.0.0.1:4444/wd/hub/status | grep -q '"ready":true'; then
-              echo "Selenium is ready"
-              break
-            fi
-            echo "Waiting for Selenium... ($i)"
-            sleep 1
-          done
-
-      - name: Debug- register page snippet (runner view)
-        run: |
-          echo "Register page snippet (runner view):"
-          curl -sS http://127.0.0.1:5000/register | head -c 400 || true
-
-      - name: Run Selenium Tests (remote Selenium service)
+      - name: Run Selenium Tests
         env:
           PYTHONPATH: src
           SELENIUMBROWSER: chrome
-          # App URL reachable from the selenium container
           APP_URL: http://host.docker.internal:5000
-          # Recommended CI flags (SeleniumBase will pass these to Chrome)
-          SBROWSER_ARGS: "--no-sandbox --disable-dev-shm-usage --disable-gpu --headless=new"
-          # Use localhost for the Selenium server (runner -> service port mapping)
-          SELENIUM_REMOTE_URL: http://127.0.0.1:4444/wd/hub
         run: |
-          echo "Using remote Selenium server: $SELENIUM_REMOTE_URL"
-          # Run tests against the remote Selenium server (point to localhost:4444)
-          pytest tests/test_selenium_*.py --headless --browser=chrome --server=http://127.0.0.1:4444/wd/hub
+          pytest tests/test_selenium_*.py --headless --browser=chrome
