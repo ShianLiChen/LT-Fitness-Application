@@ -23,7 +23,11 @@ jobs:
       - name: Install system deps and Chromium
         run: |
           sudo apt-get update
-          sudo apt-get install -y chromium-browser chromium-chromedriver
+          sudo apt-get install -y \
+            chromium-browser chromium-chromedriver \
+            libnss3 libxss1 libasound2 fonts-liberation \
+            libappindicator3-1 libatk-bridge2.0-0 libgtk-3-0 libgbm1 \
+            ca-certificates curl
           python -m pip install --upgrade pip
 
       - name: Install Python dependencies
@@ -50,7 +54,7 @@ jobs:
           # Start Flask in background and ensure it listens on all interfaces
           flask run --host=0.0.0.0 --port=5000 &
           # Wait for the app to be ready (increase attempts if needed)
-          for i in {1..15}; do
+          for i in {1..20}; do
             if curl -sS http://127.0.0.1:5000/ >/dev/null 2>&1; then
               echo "Flask is up"
               break
@@ -67,3 +71,19 @@ jobs:
           chromedriver --version || echo "no chromedriver found"
           echo "Register page snippet:"
           curl -sS http://127.0.0.1:5000/register | head -c 400 || true
+
+      - name: Run Selenium Tests
+        env:
+          PYTHONPATH: src
+          SELENIUMBROWSER: chrome
+          # Recommended Chrome flags for CI
+          SBROWSER_ARGS: "--no-sandbox --disable-dev-shm-usage"
+        run: |
+          # Detect the Chromium binary path (fallbacks)
+          BINARY=$(which chromium-browser || which chromium || echo /usr/bin/chromium-browser)
+          echo "Using browser binary: $BINARY"
+          export BINARY_LOCATION="$BINARY"
+          # Optional: show the binary path for SeleniumBase
+          echo "BINARY_LOCATION=$BINARY_LOCATION"
+          # Run tests headless using SeleniumBase
+          pytest tests/test_selenium_*.py --headless --browser=chrome
