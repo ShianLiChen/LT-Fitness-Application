@@ -60,6 +60,9 @@ jobs:
         echo "MYSQL_USER=root" >> .env
         echo "MYSQL_PASSWORD=password" >> .env
         echo "MYSQL_DB=fitness_app_test" >> .env
+        echo "FLASK_ENV=development" >> .env
+        echo "FLASK_PORT=5000" >> .env
+        echo "APP_URL=http://127.0.0.1:5000" >> .env
     
     - name: Run Unit Tests
       # Sets the PYTHONPATH so it can find the 'src' module
@@ -67,6 +70,27 @@ jobs:
         PYTHONPATH: src
       run: |
         pytest tests/ --ignore-glob=tests/test_selenium_*.py
+    
+    - name: Install Chrome & ChromeDriver
+      run: |
+        sudo apt update
+        sudo apt install -y chromium-browser chromium-chromedriver
+        sudo ln -s /usr/lib/chromium-browser/chromedriver /usr/bin/chromedriver
+
+    - name: Install Selenium
+      run: pip install selenium seleniumbase
+
+    - name: Start Flask App
+      run: |
+        export FLASK_APP=src/app.py
+        flask run --host=0.0.0.0 --port=5000 &
+        sleep 5 
+
+    - name: Run Selenium Tests
+      env:
+        PYTHONPATH: src
+      run: |
+        pytest tests/test_selenium_*.py --headless
 
   # JOB 2: Docker Verification
   docker-build-check:
