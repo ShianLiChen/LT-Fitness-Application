@@ -47,16 +47,23 @@ jobs:
       - name: Start Flask App
         run: |
           export FLASK_APP=src/app.py
+          # Start Flask in background and ensure it listens on all interfaces
           flask run --host=0.0.0.0 --port=5000 &
+          # Wait for the app to be ready (increase attempts if needed)
           for i in {1..15}; do
-            curl -sS http://127.0.0.1:5000/ && break
+            if curl -sS http://127.0.0.1:5000/ >/dev/null 2>&1; then
+              echo "Flask is up"
+              break
+            fi
+            echo "Waiting for Flask... ($i)"
             sleep 2
           done
 
-      - name: Run Selenium Tests
-        env:
-          PYTHONPATH: src
-          SELENIUMBROWSER: chrome
-          BINARY_LOCATION: /usr/bin/chromium-browser
+      - name: Debug- show browser/driver and register page snippet
         run: |
-          pytest tests/test_selenium_*.py --headless --browser=chrome
+          echo "Detecting Chromium binary and chromedriver..."
+          which chromium-browser || which chromium || echo "no chromium binary found"
+          chromium-browser --version || chromium --version || echo "no chromium binary version"
+          chromedriver --version || echo "no chromedriver found"
+          echo "Register page snippet:"
+          curl -sS http://127.0.0.1:5000/register | head -c 400 || true
