@@ -24,13 +24,16 @@ jobs:
       - name: Install system deps and Chromium + runtime libs
         run: |
           sudo apt-get update
+          sudo apt-get install -y software-properties-common
+          sudo add-apt-repository universe
+          sudo apt-get update
           sudo apt-get install -y \
             chromium-browser chromium-chromedriver \
             ca-certificates curl \
             libnss3 libxss1 fonts-liberation \
             libappindicator3-1 libatk-bridge2.0-0 libgtk-3-0 libgbm1 \
             libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 \
-            libxrandr2 libxtst6 libgconf-2-4 libproxy1v5 libasound2t64
+            libxrandr2 libxtst6 libgconf-2-4 libproxy1v5 libasound2t64 || true
           python -m pip install --upgrade pip
 
       - name: Install Python dependencies
